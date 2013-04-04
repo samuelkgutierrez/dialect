@@ -47,7 +47,7 @@ inttypes.h limits.h stdint.h stdlib.h string.h unistd.h
 AC_FUNC_MALLOC
 AC_CHECK_FUNCS([memset strerror strtoul])
 
-AC_CONFIG_FILES([Makefile])
+AC_CONFIG_FILES([Makefile src/Makefile])
 
 AC_OUTPUT
 
