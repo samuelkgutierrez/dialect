@@ -17,8 +17,10 @@ bin_PROGRAMS = \
 dialect
 
 base_src = \
-dialect.cxx
+Constants.hxx \
+Base.hxx Base.cxx \
+DialectException.hxx DialectException.cxx
 
 dialect_SOURCES = \
 ${base_src} \
-dialect
+dialect.cxx

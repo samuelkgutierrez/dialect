@@ -31,6 +31,8 @@ AM_CONFIG_HEADER([config.h])
 
 # checks for programs.
 AC_PROG_CXX
+AC_PROG_LEX
+AC_PROG_YACC
 AC_GNU_SOURCE
 
 # checks for libraries.
