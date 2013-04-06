@@ -34,7 +34,7 @@ using namespace std;
 string
 Base::int2string(int i)
 {
-    char tmpBuf[32];
+    char tmpBuf[256];
 
     fill_n(tmpBuf, sizeof(tmpBuf), '\0');
     snprintf(tmpBuf, sizeof(tmpBuf) - 1, "%d", i);

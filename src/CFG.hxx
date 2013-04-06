@@ -15,36 +15,23 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-/* context-free scanner */
+#ifndef CFG_H_INCLUDED
+#define CFG_H_INCLUDED
 
-%option interactive noyywrap nounput
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
 
-%{
+#include <string>
 
-#include "DialectException.hxx"
+class CFG {
+private:
+    /* the start of the CFG */
+    std::string startSymbol;
 
-#include <iostream>
-#include <cstdlib>
-#include <string.h>
+public:
+    CFG(void);
+    ~CFG(void);
+};
 
-#include "y.tab.h"
-
-%}
-
-/* the ascii characters that we care about in octal */
-ASCII [\41-\176]
-
-%%
-
-[ \t\n\v\f\r] { ; }
-
---> { return ARROW; }
-
-{ASCII} { yylval.id = strdup(yytext); return VARID; }
-
-"\n" { return NEWLINE; }
-
-%{ /* everything else */ %}
-. { throw DialectException("invalid input encountered during CFG scan."); }
-
-%%
+#endif

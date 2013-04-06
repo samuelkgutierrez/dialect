@@ -19,7 +19,8 @@ dialect
 base_src = \
 Constants.hxx \
 Base.hxx Base.cxx \
-DialectException.hxx DialectException.cxx
+DialectException.hxx DialectException.cxx \
+CFG.hxx CFG.cxx
 
 dialect_SOURCES = \
 ${base_src} \

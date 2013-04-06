@@ -19,17 +19,15 @@
 
 %{
 
+#include "DialectException.hxx"
+#include "CFG.hxx"
+
 #include <iostream>
 #include <string>
 #include <map>
 #include <list>
 
 #include <stdlib.h>
-
-#include "Expressions.hxx"
-
-/* AST Root */
-Program *root = NULL;
 
 int yylex(void);
 extern "C" int yyerror(const char * s);
@@ -38,31 +36,23 @@ extern "C" FILE *yyin;
 %}
 
 %union {
-    int num;
-    char *id;
-    EXPNode *expnode;
-    std::list<Statement *> *stmts;
-    Statement *st;
-    Program *prog;
+    CFG cfg;
+    std::string rhs;
+    std::string lhs;
 }
 
-%token <num> NUMBER
-%token <id> VARID
-%token NEWLINE CONST VAR DQ
-
-%left PLUS
-%left MUL
-%left LPAREN RPAREN
-%nonassoc UMINUS
+%token ARROW NEWLINE
 
 %type <expnode> exp
 %type <stmts> stmtlist
 %type <st> stmt
-%type <prog> program
+%type <cfg> cfg
 
 %start program
 
 %%
+
+cfg : 
 
 program : stmtlist {
               $$ = new Program($1);
@@ -84,8 +74,8 @@ stmt : exp {
            std::cerr << "unrecognized grammar -- cannot continue..."
                      << std::endl;
            return 1;
-      }
-     ;
+     }
+ ;
 
 exp : LPAREN exp RPAREN {
           $$ = $2;
