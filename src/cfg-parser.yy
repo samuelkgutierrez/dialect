@@ -52,8 +52,6 @@ extern "C" FILE *yyin;
 
 %%
 
-cfg : 
-
 program : stmtlist {
               $$ = new Program($1);
               root = $$;

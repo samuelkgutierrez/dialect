@@ -13,6 +13,8 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+AM_YFLAGS = -d -t -y
+
 bin_PROGRAMS = \
 dialect
 
@@ -20,8 +22,12 @@ base_src = \
 Constants.hxx \
 Base.hxx Base.cxx \
 DialectException.hxx DialectException.cxx \
-CFG.hxx CFG.cxx
+CFG.hxx CFG.cxx \
+cfg-scanner.ll cfg-scanner.yy
 
 dialect_SOURCES = \
 ${base_src} \
 dialect.cxx
+
+CLEANFILES = \
+cfg-scanner.cc

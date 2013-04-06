@@ -15,8 +15,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef DIALECT_EXCEPTION_INCLUDED
-#define DIALECT_EXCEPTION_INCLUDED
+#ifndef DIALECT_H_EXCEPTION_INCLUDED
+#define DIALECT_H_EXCEPTION_INCLUDED
 
 #include <string>
 #include <exception>

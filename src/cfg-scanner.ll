@@ -27,7 +27,9 @@
 #include <cstdlib>
 #include <string.h>
 
+#if 0
 #include "y.tab.h"
+#endif
 
 %}
 
@@ -36,15 +38,13 @@ ASCII [\41-\176]
 
 %%
 
-[ \t\n\v\f\r] { ; }
-
---> { return ARROW; }
+[ \t] { ; }
 
 {ASCII} { yylval.id = strdup(yytext); return VARID; }
 
 "\n" { return NEWLINE; }
+[\n\v\f\r] { ; }
 
-%{ /* everything else */ %}
 . { throw DialectException("invalid input encountered during CFG scan."); }
 
 %%
