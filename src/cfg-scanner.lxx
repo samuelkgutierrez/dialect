@@ -27,7 +27,7 @@
 #include <cstdlib>
 #include <string.h>
 
-#include "y.tab.h"
+//#include "y.tab.h"
 
 %}
 
@@ -38,7 +38,7 @@ ASCII [\41-\176]
 
 [ \t] { ; }
 
-{ASCII} { yylval.id = strdup(yytext); return VARID; }
+{ASCII} { return 0; }
 
 "\n" { return NEWLINE; }
 [\n\v\f\r] { ; }

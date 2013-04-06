@@ -36,92 +36,27 @@ extern "C" FILE *yyin;
 %}
 
 %union {
-    CFG cfg;
+    CFG *testfoo;
     std::string rhs;
     std::string lhs;
 }
 
-%token ARROW NEWLINE
+%token NEWLINE
 
-%type <expnode> exp
-%type <stmts> stmtlist
-%type <st> stmt
-%type <cfg> cfg
+%type <testfoo> cfg
 
 %start program
 
 %%
 
-program : stmtlist {
-              $$ = new Program($1);
-              root = $$;
-              return 0;
+program : cfg {
+              return new CFG();
           }
         ;
 
-stmtlist : stmt NEWLINE {
-              $$ = new std::list<Statement *>();
-              $$->push_back($1);
-           }
-         ;
-
-stmt : exp {
-           $$ = new StatementAssign("$", $1);
-       }
-     | error {
-           std::cerr << "unrecognized grammar -- cannot continue..."
-                     << std::endl;
-           return 1;
-     }
- ;
-
-exp : LPAREN exp RPAREN {
-          $$ = $2;
-      }
-    | PLUS exp exp {
-          /* if both are leaves, then evaluate and create a new EXPNodeNum */
-          if ($2->constLeaf() && $3->constLeaf()) {
-              $$ = new EXPNodeNum($2->evaluate() + $3->evaluate());
-          }
-          else {
-              if ($2->print() < $3->print()) {
-                  $$ = new EXPNodeOpAdd($2, $3);
-              }
-              else {
-                  $$ = new EXPNodeOpAdd($3, $2);
-              }
-          }
-      }
-    | MUL exp exp {
-          /* if both are leaves, then evaluate and create a new EXPNodeNum */
-          if ($2->constLeaf() && $3->constLeaf()) {
-              $$ = new EXPNodeNum($2->evaluate() * $3->evaluate());
-          }
-          else {
-              if ($2->print() < $3->print()) {
-                  $$ = new EXPNodeOpMul($2, $3);
-              }
-              else {
-                  $$ = new EXPNodeOpMul($3, $2);
-              }
-          }
-      }
-    | CONST NUMBER {
-          $$ = new EXPNodeNum($2);
-      }
-    | CONST LPAREN NUMBER RPAREN {
-          $$ = new EXPNodeNum($3);
-      }
-    | CONST UMINUS NUMBER {
-          $$ = new EXPNodeNum(-$3);
-      }
-    | CONST LPAREN UMINUS NUMBER RPAREN {
-          $$ = new EXPNodeNum(-$4);
-      }
-    | VAR DQ VARID DQ {
-          $$ = new EXPNodeVar($3);
-      }
-    ;
+cfg : NEWLINE {
+    $$ = new CFG();
+};
 
 %%
 

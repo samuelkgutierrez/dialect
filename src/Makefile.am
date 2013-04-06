@@ -13,22 +13,21 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-BUILT_SOURCES = \
-cfg-scanner.cxx
 
-AM_YFLAGS= -d -t -y
-AM_LFLAGS= -8
+AM_YFLAGS=-d
 
 bin_PROGRAMS = \
 dialect
 
-base_src = \
+PARSER_FILES = cfg-parser.yxx cfg-parser.hxx cfg-scanner.lxx
+
+BASE_SRC = \
 Constants.hxx \
 Base.hxx Base.cxx \
 DialectException.hxx DialectException.cxx \
 CFG.hxx CFG.cxx \
-cfg-scanner.lxx cfg-scanner.yxx
+${PARSER_FILES}
 
 dialect_SOURCES = \
-${base_src} \
+${BASE_SRC} \
 dialect.cxx
