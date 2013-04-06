@@ -16,6 +16,12 @@
 
 AM_YFLAGS=-d
 
+BUILT_SOURCES = \
+cfg-parser.cxx
+
+CLEANFILES = \
+${BUILT_SOURCES} cfg-parser.h
+
 bin_PROGRAMS = \
 dialect
 
