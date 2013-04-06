@@ -19,9 +19,6 @@
 
 %{
 
-#include "DialectException.hxx"
-#include "CFG.hxx"
-
 #include <iostream>
 #include <string>
 #include <map>
@@ -36,26 +33,25 @@ extern "C" FILE *yyin;
 %}
 
 %union {
-    CFG *testfoo;
-    std::string rhs;
-    std::string lhs;
+    char *rhs;
+    char *lhs;
 }
 
 %token NEWLINE
 
-%type <testfoo> cfg
+%type <rhs> cfg
 
 %start program
 
 %%
 
 program : cfg {
-              return new CFG();
+              return 0; 
           }
         ;
 
 cfg : NEWLINE {
-    $$ = new CFG();
+    $$ = NULL;
 };
 
 %%

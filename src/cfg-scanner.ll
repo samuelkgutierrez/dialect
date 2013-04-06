@@ -15,19 +15,17 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-/* context-free scanner */
+/* context-free grammar scanner */
 
 %option interactive noyywrap nounput
 
 %{
 
-#include "DialectException.hxx"
+#include "cfg-parser.h"
 
 #include <iostream>
 #include <cstdlib>
-#include <string.h>
-
-#include "cfg-parser.h"
+#include <string>
 
 %}
 
@@ -43,6 +41,8 @@ ASCII [\41-\176]
 "\n" { return NEWLINE; }
 [\n\v\f\r] { ; }
 
-. { throw DialectException("invalid input encountered during CFG scan."); }
+. { std::cerr << "invalid input encountered during CFG scan." << std::endl;
+    exit(EXIT_FAILURE);
+  }
 
 %%
