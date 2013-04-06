@@ -27,7 +27,7 @@
 #include <cstdlib>
 #include <string.h>
 
-//#include "y.tab.h"
+#include "cfg-parser.h"
 
 %}
 
