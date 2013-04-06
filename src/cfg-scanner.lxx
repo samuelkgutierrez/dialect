@@ -27,9 +27,7 @@
 #include <cstdlib>
 #include <string.h>
 
-#if 0
 #include "y.tab.h"
-#endif
 
 %}
 

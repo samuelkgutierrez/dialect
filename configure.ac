@@ -22,7 +22,7 @@ AC_INIT([dialect], [0.1])
 m4_ifdef([AM_SILENT_RULES], [AM_SILENT_RULES([yes])])
 
 AC_CONFIG_SRCDIR([src])
-#AC_CONFIG_MACRO_DIR([m4])
+AC_CONFIG_MACRO_DIR([m4])
 
 # note: -Wall -Werror are automake options.  they are NOT compiler flags
 AM_INIT_AUTOMAKE([-Wall -Werror foreign])
@@ -34,6 +34,7 @@ AC_PROG_CXX
 AC_PROG_LEX
 AC_PROG_YACC
 AC_GNU_SOURCE
+AC_PROG_LIBTOOL
 
 # checks for libraries.
 # none at this point
