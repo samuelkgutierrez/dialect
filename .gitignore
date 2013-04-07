@@ -15,3 +15,7 @@ depcomp
 install-sh
 missing
 stamp-h1
+ylwrap
+m4
+libtool
+ltmain.sh
