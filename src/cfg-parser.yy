@@ -54,14 +54,9 @@ cfg : productions {
     ;
 
 productions : production NEWLINE {
+                  ;
               }
             | productions production NEWLINE {
-                  ;
-              }
-            | COMMENT productions {
-                  ;
-              }
-            | productions COMMENT {
                   ;
               }
             ;
@@ -75,6 +70,9 @@ production : LHS ARROW RHS {
                  cfgProductions.push_back(CFGProduction(*$1));
                  delete $1;
              }
+           | COMMENT {
+                 ;
+             }
            | {
                  ;
              }
@@ -87,12 +85,7 @@ production : LHS ARROW RHS {
 int
 parserParse(FILE *fp = NULL)
 {
-    if (NULL == fp) {
-        yyin = stdin;
-    }
-    else {
-        yyin = fp;
-    }
+    yyin = fp;
     /* fp closed by caller */
     return yyparse();
 }

@@ -45,7 +45,7 @@ WS [ \t]
 
 %%
 
-"#".*"\n" { return COMMENT; }
+"#".* { return COMMENT; }
 
 {LHSASCII} { SAVE_TOKEN; return LHS; }
 
