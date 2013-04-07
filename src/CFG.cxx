@@ -27,6 +27,14 @@ using namespace std;
 const string CFGProduction::EPSILON = "\b";
 
 /* ////////////////////////////////////////////////////////////////////////// */
+ostream &
+operator<<(ostream &out, const CFGProduction &production)
+{
+    out << production.leftHandSide << " --> " << production.rightHandSide;
+    return out;
+}
+
+/* ////////////////////////////////////////////////////////////////////////// */
 CFG::CFG(void)
 {
     this->verbose = false;
@@ -35,8 +43,12 @@ CFG::CFG(void)
 /* ////////////////////////////////////////////////////////////////////////// */
 CFG::CFG(vector<CFGProduction> productions)
 {
+    CFGProduction firstProduction;
+
     this->verbose = false;
     this->productions = productions;
+    firstProduction = *this->productions.begin();
+    this->startSymbol = firstProduction.lhs();
 }
 
 /* ////////////////////////////////////////////////////////////////////////// */
@@ -47,6 +59,7 @@ CFG::emitAllProductions(void) const
     for (production = this->productions.begin();
          this->productions.end() != production;
          ++production) {
+        cout << "c " << *production << endl;
     }
 }
 
@@ -56,6 +69,8 @@ CFG::emitState(void) const
 {
     cout << "c" << endl;
     cout << "c start symbol: " << this->startSymbol << endl;
-    cout << "c productions" << endl;
+    cout << "c productions begin" << endl;
+    this->emitAllProductions();
+    cout << "c productions end" << endl;
     cout << "c" << endl;
 }

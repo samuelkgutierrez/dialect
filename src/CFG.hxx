@@ -49,6 +49,9 @@ public:
     std::string lhs(void) const { return this->leftHandSide; }
 
     std::string rhs(void) const { return this->rightHandSide; }
+
+    friend std::ostream &operator<<(std::ostream &out,
+                                    const CFGProduction &production);
 };
 
 /* ////////////////////////////////////////////////////////////////////////// */
