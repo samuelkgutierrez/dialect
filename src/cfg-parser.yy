@@ -51,17 +51,17 @@ CFG *cfg = NULL;
 cfg : productions {
           return 0;
       }
-    | COMMENT productions {
-          ;
-      }
-    | COMMENT {
-          ;
-      }
     ;
 
 productions : production NEWLINE {
               }
             | productions production NEWLINE {
+                  ;
+              }
+            | COMMENT productions {
+                  ;
+              }
+            | productions COMMENT {
                   ;
               }
             ;
