@@ -15,6 +15,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "Base.hxx"
 #include "CFG.hxx"
 #include "Constants.hxx"
 #include "DialectException.hxx"
@@ -59,7 +60,7 @@ CFG::emitAllProductions(void) const
     for (production = this->productions.begin();
          this->productions.end() != production;
          ++production) {
-        cout << "c " << *production << endl;
+        dout << "  " << *production << endl;
     }
 }
 
@@ -67,10 +68,10 @@ CFG::emitAllProductions(void) const
 void
 CFG::emitState(void) const
 {
-    cout << "c" << endl;
-    cout << "c start symbol: " << this->startSymbol << endl;
-    cout << "c productions begin" << endl;
+    dout << endl;
+    dout << "start symbol: " << this->startSymbol << endl;
+    dout << "productions begin" << endl;
     this->emitAllProductions();
-    cout << "c productions end" << endl;
-    cout << "c" << endl;
+    dout << "productions end" << endl;
+    dout << endl;
 }

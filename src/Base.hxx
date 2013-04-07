@@ -23,6 +23,10 @@
 #endif
 
 #include <string>
+#include <iostream>
+
+/* dialect output */
+#define dout std::cout << "c "
 
 class Base {
 private:
