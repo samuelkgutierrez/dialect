@@ -21,6 +21,8 @@
 #include <iostream>
 #include <string>
 
+#include "Constants.hxx"
+#include "DialectException.hxx"
 #include "cfg-parser.h"
 
 extern int parserParse(FILE *fp);
@@ -48,11 +50,50 @@ usage(void)
 }
 
 /* ////////////////////////////////////////////////////////////////////////// */
+static void
+parseCFG(string what)
+{
+    FILE *fp = NULL;
+
+    if (0 != parserParse(stdin)) {
+        string estr = "error encountered during CFG parse. cannot continue.";
+        throw DialectException(DIALECT_WHERE, estr);
+    }
+}
+
+/* ////////////////////////////////////////////////////////////////////////// */
 /* ////////////////////////////////////////////////////////////////////////// */
 int
 main(int argc, char **argv)
 {
-    echoHeader();
-    parserParse(stdin);
+    bool verboseMode = false;
+    string cfgDescription, fileToParse;
+
+    if (3 != argc && 4 != argc) {
+        usage();
+        return EXIT_FAILURE;
+    }
+    else if (3 == argc) {
+        cfgDescription = string(argv[1]);
+        fileToParse = string(argv[2]);
+    }
+    else {
+        if ("-v" != string(argv[1])) {
+            usage();
+            return EXIT_FAILURE;
+        }
+        cfgDescription = string(argv[2]);
+        fileToParse = string(argv[3]);
+        verboseMode = true;
+    }
+    try {
+        echoHeader();
+        parseCFG(cfgDescription);
+    }
+    catch (DialectException &e) {
+        cerr << e.what() << endl;
+        return EXIT_FAILURE;
+    }
+
     return EXIT_SUCCESS;
 }
