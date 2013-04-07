@@ -31,6 +31,7 @@
 /* ////////////////////////////////////////////////////////////////////////// */
 class CFGProduction {
 private:
+    static const std::string EPSILON;
     /* left-hand side of production */
     std::string leftHandSide;
     /* right-hand side of production */
@@ -40,11 +41,8 @@ public:
     CFGProduction(void) { /* nothing to do */; }
 
     CFGProduction(std::string lhs,
-                  std::string rhs = "epsilon") :
-        leftHandSide(lhs), rightHandSide(rhs) {
-            std::cout << "P: " << this->leftHandSide << " "
-                      << this->rightHandSide << std::endl;
-        }
+                  std::string rhs = CFGProduction::EPSILON) :
+        leftHandSide(lhs), rightHandSide(rhs) { ; }
 
     ~CFGProduction(void) { /* nothing to do */; }
 

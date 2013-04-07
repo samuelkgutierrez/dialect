@@ -54,7 +54,6 @@ cfg : productions {
     ;
 
 productions : production NEWLINE {
-                  std::cout << "START" << std::endl;
               }
             | productions production NEWLINE {
                   ;
@@ -62,13 +61,11 @@ productions : production NEWLINE {
             ;
 
 production : LHS ARROW RHS {
-                 std::cout << *$1 << " --> " << *$3 << std::endl;
                  cfgProductions.push_back(CFGProduction(*$1, *$3));
                  delete $1;
                  delete $3;
              }
            | LHS ARROW {
-                 std::cout << *$1 << " --> " << "epsilon" << std::endl;
                  cfgProductions.push_back(CFGProduction(*$1));
                  delete $1;
              }

@@ -34,12 +34,14 @@ do {                                                                           \
 
 %}
 
+/* left-hand sides can only be capital letters */
+LHSASCII [A-Z]
 /* the ascii characters that we care about in octal */
 ASCII [\41-\176]
 
 %%
 
-{ASCII} { SAVE_TOKEN; return LHS; }
+{LHSASCII} { SAVE_TOKEN; return LHS; }
 
 "-->" { return ARROW; }
 

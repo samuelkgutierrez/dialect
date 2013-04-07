@@ -19,7 +19,11 @@
 #include "Constants.hxx"
 #include "DialectException.hxx"
 
+#include <string>
+
 using namespace std;
+
+const string CFGProduction::EPSILON = "epsilon";
 
 /* ////////////////////////////////////////////////////////////////////////// */
 CFG::CFG(void)
