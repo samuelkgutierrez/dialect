@@ -29,6 +29,7 @@ int yylex(void);
 extern "C" int yyerror(const char * s);
 extern "C" FILE *yyin;
 
+/* a pointer to the newly created context-free grammar instance */
 CFG *cfg = NULL;
 
 %}
@@ -58,8 +59,10 @@ productions : production {
             ;
 
 production : LHS ARROW RHS NEWLINE {
-                 std::cout << "$1" << "$2" << "$3" << std::endl;
-                 std:: cout << "HERE!!!" << std::endl;
+                 std::cout << *$1 << *$2 << *$3 << std::endl;
+             }
+           | LHS ARROW NEWLINE {
+                 std::cout << *$1 << *$2 << "epsilon" << std::endl;
              }
            ;
 

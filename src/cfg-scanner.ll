@@ -27,7 +27,10 @@
 
 #include "cfg-parser.h"
 
-#define SAVE_TOKEN yylval.str = new std::string(yytext, yyleng)
+#define SAVE_TOKEN                                                             \
+do {                                                                           \
+    yylval.str = new std::string(yytext, yyleng);                              \
+} while (0)
 
 %}
 
