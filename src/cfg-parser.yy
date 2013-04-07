@@ -49,23 +49,25 @@ CFG *cfg = NULL;
 
 %%
 
-cfg : /* empty */
-    | cfg productions
+cfg : productions { std::cout << "CREATE CFG" << std::endl; }
 ;
 
-productions : NEWLINE
-            | production NEWLINE
+productions : /* empty */
+            | productions production
 ;
 
-production : LHS ARROW RHS {
-                 cfgProductions.push_back(CFGProduction(*$1, *$3));
-                 delete $1;
-                 delete $3;
-             }
-           | LHS ARROW {
-                 cfgProductions.push_back(CFGProduction(*$1));
-                 delete $1;
-             }
+production : NEWLINE
+           | prule NEWLINE
+
+prule : LHS ARROW RHS {
+            cfgProductions.push_back(CFGProduction(*$1, *$3));
+            delete $1;
+            delete $3;
+        }
+      | LHS ARROW {
+            cfgProductions.push_back(CFGProduction(*$1));
+            delete $1;
+        }
 ;
 
 %%
