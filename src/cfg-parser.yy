@@ -24,6 +24,7 @@
 #include <iostream>
 #include <string>
 #include <cstdlib>
+#include <vector>
 
 int yylex(void);
 extern "C" int yyerror(const char * s);
@@ -52,17 +53,22 @@ cfg : productions {
       }
     ;
 
-productions : production {
+productions : production NEWLINE {
+                  std::cout << "START" << std::endl;
               }
-            | productions production {
+            | productions production NEWLINE {
+                  ;
               }
             ;
 
-production : LHS ARROW RHS NEWLINE {
+production : LHS ARROW RHS {
                  std::cout << *$1 << *$2 << *$3 << std::endl;
              }
-           | LHS ARROW NEWLINE {
+           | LHS ARROW {
                  std::cout << *$1 << *$2 << "epsilon" << std::endl;
+             }
+           | {
+                 ;
              }
            ;
 

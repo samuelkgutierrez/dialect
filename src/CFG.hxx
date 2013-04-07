@@ -23,11 +23,35 @@
 #endif
 
 #include <string>
+#include <vector>
+
+class CFGProduction {
+private:
+    /* left-hand side of production */
+    std::string leftHandSide;
+    /* right-hand side of production */
+    std::string rightHandSide;
+
+public:
+    CFGProduction(void) { /* nothing to do */; }
+
+    CFGProduction(std::string lhs,
+                  std::string rhs) :
+        leftHandSide(lhs), rightHandSide(rhs) { ; }
+
+    ~CFGProduction(void) { /* nothing to do */; }
+
+    std::string lhs(void) const { return this->leftHandSide; }
+
+    std::string rhs(void) const { return this->rightHandSide; }
+};
 
 class CFG {
 private:
     /* the start of the CFG */
     std::string startSymbol;
+    /* list of ALL productions */
+    std::vector<CFGProduction> productions;
 
 public:
     CFG(void);
