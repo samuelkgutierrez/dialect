@@ -49,7 +49,8 @@ ASCII [\41-\176]
 
 "\n" { return NEWLINE; }
 
-. { std::cerr << "invalid token encountered during CFG scan." << std::endl;
+. { std::cerr << "invalid token encountered during CFG scan... bye!"
+              << std::endl;
     yyterminate();
   }
 

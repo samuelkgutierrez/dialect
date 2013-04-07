@@ -30,6 +30,7 @@ int yylex(void);
 extern "C" int yyerror(const char * s);
 extern "C" FILE *yyin;
 
+std::vector<CFGProduction> cfgProductions;
 /* a pointer to the newly created context-free grammar instance */
 CFG *cfg = NULL;
 
@@ -41,8 +42,7 @@ CFG *cfg = NULL;
 
 %token <str> RHS
 %token <str> LHS
-%token <str> ARROW
-%token NEWLINE
+%token NEWLINE ARROW
 
 %start cfg
 
@@ -63,14 +63,13 @@ productions : production NEWLINE {
 
 production : LHS ARROW RHS {
                  std::cout << *$1 << " --> " << *$3 << std::endl;
-                 CFGProduction(*$1, *$3);
+                 cfgProductions.push_back(CFGProduction(*$1, *$3));
                  delete $1;
                  delete $3;
-
              }
            | LHS ARROW {
                  std::cout << *$1 << " --> " << "epsilon" << std::endl;
-                 CFGProduction(*$1);
+                 cfgProductions.push_back(CFGProduction(*$1));
                  delete $1;
              }
            | {
