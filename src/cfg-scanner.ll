@@ -46,17 +46,17 @@ WS [ \t]
 
 %%
 
-"#".*"\n" { ; }
+"#".+"\n" { ; }
+
+{WS}+ { ; }
+
+"\n" { return NEWLINE; }
 
 {LHSASCII} { SAVE_TOKEN; return LHS; }
 
 "-->" { return ARROW; }
 
 {ASCII}+ { SAVE_TOKEN; return RHS; }
-
-{WS}+ { ; }
-
-"\n" { return NEWLINE; }
 
 . { std::cerr << "invalid token encountered during CFG scan... bye!"
               << std::endl;

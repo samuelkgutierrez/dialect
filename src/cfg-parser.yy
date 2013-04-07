@@ -42,7 +42,7 @@ CFG *cfg = NULL;
 
 %token <str> RHS
 %token <str> LHS
-%token NEWLINE ARROW COMMENT
+%token NEWLINE ARROW
 
 %start cfg
 
@@ -53,23 +53,24 @@ cfg : productions {
       }
     ;
 
-productions : production {
+productions : production NEWLINE {
                   ;
               }
-            | productions production {
+            | productions production NEWLINE {
                   ;
               }
             ;
 
-production : LHS ARROW RHS NEWLINE {
+production : LHS ARROW RHS {
                  cfgProductions.push_back(CFGProduction(*$1, *$3));
                  delete $1;
                  delete $3;
              }
-           | LHS ARROW NEWLINE {
+           | LHS ARROW {
                  cfgProductions.push_back(CFGProduction(*$1));
                  delete $1;
              }
+           | { }
            ;
 
 %%
