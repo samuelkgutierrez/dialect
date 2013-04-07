@@ -21,6 +21,9 @@
 #include <iostream>
 #include <string>
 
+#include <string.h>
+#include <errno.h>
+
 #include "Constants.hxx"
 #include "DialectException.hxx"
 #include "cfg-parser.h"
@@ -55,9 +58,17 @@ parseCFG(string what)
 {
     FILE *fp = NULL;
 
+    if (NULL == (fp = fopen(what.c_str(), "r"))) {
+        int err = errno;
+        string estr = "cannot open: " + what + ". why: " + strerror(err) + ".";
+        throw DialectException(DIALECT_WHERE, estr);
+    }
     if (0 != parserParse(stdin)) {
         string estr = "error encountered during CFG parse. cannot continue.";
         throw DialectException(DIALECT_WHERE, estr);
+    }
+    if (NULL != fp) {
+        fclose(fp);
     }
 }
 
