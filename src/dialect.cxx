@@ -26,9 +26,11 @@
 
 #include "Constants.hxx"
 #include "DialectException.hxx"
+#include "CFG.hxx"
 #include "cfg-parser.h"
 
 extern int parserParse(FILE *fp);
+extern CFG *contextFreeGrammar;
 
 using namespace std;
 
@@ -100,6 +102,8 @@ main(int argc, char **argv)
     try {
         echoHeader();
         parseCFG(cfgDescription);
+        contextFreeGrammar->beVerbose();
+        contextFreeGrammar->emitState();
     }
     catch (DialectException &e) {
         cerr << e.what() << endl;

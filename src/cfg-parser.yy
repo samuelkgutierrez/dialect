@@ -31,12 +31,12 @@ int yylex(void);
 extern "C" int yyerror(const char * s);
 extern "C" FILE *yyin;
 
+/* pointer to the newly created context-free grammar instance */
+CFG *contextFreeGrammar = NULL;
 /* input line number used for nice error messages */
 int lineNo = 1;
 /* list of productions */
 std::vector<CFGProduction> cfgProductions;
-/* a pointer to the newly created context-free grammar instance */
-CFG *cfg = NULL;
 
 %}
 
@@ -46,21 +46,22 @@ CFG *cfg = NULL;
 
 %token <str> RHS
 %token <str> LHS
+%token <contextFreeGrammar>
 %token NEWLINE ARROW COMMENT
 
 %start cfg
 
 %%
 
-cfg : productions { std::cout << "CREATE CFG" << std::endl; }
+cfg : productions { contextFreeGrammar = new CFG(cfgProductions); }
 ;
 
 productions : /* empty */
             | productions production
 ;
 
-production : NEWLINE { lineNo++; }
-           | COMMENT { lineNo++; }
+production : NEWLINE       { lineNo++; }
+           | COMMENT       { lineNo++; }
            | prule NEWLINE { lineNo++; }
 
 prule : LHS ARROW RHS {

@@ -56,6 +56,8 @@ public:
 /* ////////////////////////////////////////////////////////////////////////// */
 class CFG {
 private:
+    /* flag indicating whether or not to emit debug output to stdout */
+    bool verbose;
     /* the start of the CFG */
     std::string startSymbol;
     /* list of ALL productions */
@@ -63,7 +65,16 @@ private:
 
 public:
     CFG(void);
-    ~CFG(void);
+
+    CFG(std::vector<CFGProduction> productions);
+
+    ~CFG(void) { ; }
+
+    void beVerbose(bool v = true) { this->verbose = v; }
+
+    void emitAllProductions(void) const;
+
+    void emitState(void) const;
 };
 
 #endif

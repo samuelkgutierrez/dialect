@@ -20,19 +20,42 @@
 #include "DialectException.hxx"
 
 #include <string>
+#include <vector>
 
 using namespace std;
 
-const string CFGProduction::EPSILON = "epsilon";
+const string CFGProduction::EPSILON = "\b";
 
 /* ////////////////////////////////////////////////////////////////////////// */
 CFG::CFG(void)
 {
-    ;
+    this->verbose = false;
 }
 
 /* ////////////////////////////////////////////////////////////////////////// */
-CFG::~CFG(void)
+CFG::CFG(vector<CFGProduction> productions)
 {
-    ;
+    this->verbose = false;
+    this->productions = productions;
+}
+
+/* ////////////////////////////////////////////////////////////////////////// */
+void
+CFG::emitAllProductions(void) const
+{
+    vector<CFGProduction>::const_iterator production;
+    for (production = this->productions.begin();
+         this->productions.end() != production;
+         ++production) {
+    }
+}
+
+/* ////////////////////////////////////////////////////////////////////////// */
+void
+CFG::emitState(void) const
+{
+    cout << "c" << endl;
+    cout << "c start symbol: " << this->startSymbol << endl;
+    cout << "c productions" << endl;
+    cout << "c" << endl;
 }
