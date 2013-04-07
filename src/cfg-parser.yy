@@ -31,6 +31,9 @@ int yylex(void);
 extern "C" int yyerror(const char * s);
 extern "C" FILE *yyin;
 
+/* input line number used for nice error messages */
+int lineNo = 1;
+/* list of productions */
 std::vector<CFGProduction> cfgProductions;
 /* a pointer to the newly created context-free grammar instance */
 CFG *cfg = NULL;
@@ -43,7 +46,7 @@ CFG *cfg = NULL;
 
 %token <str> RHS
 %token <str> LHS
-%token NEWLINE ARROW
+%token NEWLINE ARROW COMMENT
 
 %start cfg
 
@@ -56,8 +59,9 @@ productions : /* empty */
             | productions production
 ;
 
-production : NEWLINE
-           | prule NEWLINE
+production : NEWLINE { lineNo++; }
+           | COMMENT { lineNo++; }
+           | prule NEWLINE { lineNo++; }
 
 prule : LHS ARROW RHS {
             cfgProductions.push_back(CFGProduction(*$1, *$3));
@@ -79,6 +83,7 @@ parserParse(FILE *fp = NULL)
 {
     /* set YYDEBUG to anything for more parser debug output */
     yydebug = !!getenv("YYDEBUG");
+    /* set yyin */
     yyin = fp;
     /* fp closed by caller */
     return yyparse();
@@ -88,6 +93,9 @@ parserParse(FILE *fp = NULL)
 int
 yyerror(const char *s)
 {
+    std::cout << "parse error:" << std::endl
+              << "- what: " << s << std::endl
+              << "- where: line " << lineNo << std::endl;
     /* ignored */
     return 42;
 }

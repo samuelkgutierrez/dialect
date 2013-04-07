@@ -20,7 +20,7 @@
 %option interactive noyywrap nounput
 
 /* uncomment for tons of flex output */
-%option debug
+/* %option debug */
 
 %{
 
@@ -46,7 +46,7 @@ WS [ \t]
 
 %%
 
-"#".+"\n" { ; }
+"#".+"\n" { return COMMENT; }
 
 {WS}+ { ; }
 
