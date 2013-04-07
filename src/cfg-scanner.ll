@@ -36,11 +36,11 @@ ASCII [\41-\176]
 
 %%
 
-{ASCII} { SAVE_TOKEN; return RHS; }
+{ASCII} { SAVE_TOKEN; return LHS; }
 
 "-->" { SAVE_TOKEN; return ARROW; }
 
-{ASCII}+ { SAVE_TOKEN; return LHS; }
+{ASCII}+ { SAVE_TOKEN; return RHS; }
 
 [ \t] { ; }
 
