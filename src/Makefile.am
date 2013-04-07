@@ -14,7 +14,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 
-AM_YFLAGS=-d
+AM_YFLAGS=-d -t
 
 BUILT_SOURCES = \
 cfg-parser.cc cfg-parser.h cfg-scanner.cc

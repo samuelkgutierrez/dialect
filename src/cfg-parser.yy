@@ -19,52 +19,57 @@
 
 %{
 
+#include "CFG.hxx"
+
 #include <iostream>
 #include <string>
-#include <map>
-#include <list>
-
-#include <stdlib.h>
+#include <cstdlib>
 
 int yylex(void);
 extern "C" int yyerror(const char * s);
 extern "C" FILE *yyin;
 
+CFG *cfg = NULL;
+
 %}
 
 %union {
-    char *rhs;
-    char *lhs;
+    std::string *str;
 }
 
+%token <str> RHS
+%token <str> LHS
+%token <str> ARROW
 %token NEWLINE
 
-%type <rhs> cfg
-
-%start program
+%start cfg
 
 %%
 
-program : cfg {
-              return 0; 
-          }
-        ;
+cfg : productions {
+          return 0;
+      }
+    ;
 
-cfg : NEWLINE {
-    $$ = NULL;
-};
+productions : production {
+              }
+            | productions production {
+              }
+            ;
+
+production : LHS ARROW RHS NEWLINE {
+                 std::cout << "$1" << "$2" << "$3" << std::endl;
+                 std:: cout << "HERE!!!" << std::endl;
+             }
+           ;
 
 %%
 
 /* ////////////////////////////////////////////////////////////////////////// */
 /* wrapper for yyparse */
 int
-parserParse(FILE *fp)
+parserParse(FILE *fp = NULL)
 {
-    /* set to 1 for tons of debug output */
-#if 0
-    yydebug = 1;
-#endif
     if (NULL == fp) {
         yyin = stdin;
     }

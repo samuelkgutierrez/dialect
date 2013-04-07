@@ -15,10 +15,15 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+
 #include <cstdlib>
 #include <cstdio>
 #include <iostream>
 #include <string>
+
+#include "cfg-parser.h"
+
+extern int parserParse(FILE *fp);
 
 using namespace std;
 
@@ -48,5 +53,6 @@ int
 main(int argc, char **argv)
 {
     echoHeader();
+    parserParse(stdin);
     return EXIT_SUCCESS;
 }

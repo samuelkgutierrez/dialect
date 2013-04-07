@@ -21,11 +21,13 @@
 
 %{
 
-#include "cfg-parser.h"
-
 #include <iostream>
 #include <cstdlib>
 #include <string>
+
+#include "cfg-parser.h"
+
+#define SAVE_TOKEN yylval.str = new std::string(yytext, yyleng)
 
 %}
 
@@ -34,15 +36,18 @@ ASCII [\41-\176]
 
 %%
 
+{ASCII} { SAVE_TOKEN; return RHS; }
+
+"-->" { SAVE_TOKEN; return ARROW; }
+
+{ASCII}+ { SAVE_TOKEN; return LHS; }
+
 [ \t] { ; }
 
-{ASCII} { return 0; }
-
 "\n" { return NEWLINE; }
-[\n\v\f\r] { ; }
 
-. { std::cerr << "invalid input encountered during CFG scan." << std::endl;
-    exit(EXIT_FAILURE);
+. { std::cerr << "invalid token encountered during CFG scan." << std::endl;
+    yyterminate();
   }
 
 %%
