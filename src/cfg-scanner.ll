@@ -19,6 +19,7 @@
 
 %option interactive noyywrap nounput
 
+/* uncomment for tons of flex output */
 %option debug
 
 %{
@@ -45,7 +46,7 @@ WS [ \t]
 
 %%
 
-"#".* { return COMMENT; }
+"#".*"\n" { ; }
 
 {LHSASCII} { SAVE_TOKEN; return LHS; }
 
@@ -53,7 +54,7 @@ WS [ \t]
 
 {ASCII}+ { SAVE_TOKEN; return RHS; }
 
-{WS} { ; }
+{WS}+ { ; }
 
 "\n" { return NEWLINE; }
 
