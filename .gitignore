@@ -19,3 +19,4 @@ ylwrap
 m4
 libtool
 ltmain.sh
+.ycm_extra_conf.pyc
