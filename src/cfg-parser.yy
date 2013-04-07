@@ -62,10 +62,16 @@ productions : production NEWLINE {
             ;
 
 production : LHS ARROW RHS {
-                 std::cout << *$1 << *$2 << *$3 << std::endl;
+                 std::cout << *$1 << " --> " << *$3 << std::endl;
+                 CFGProduction(*$1, *$3);
+                 delete $1;
+                 delete $3;
+
              }
            | LHS ARROW {
-                 std::cout << *$1 << *$2 << "epsilon" << std::endl;
+                 std::cout << *$1 << " --> " << "epsilon" << std::endl;
+                 CFGProduction(*$1);
+                 delete $1;
              }
            | {
                  ;

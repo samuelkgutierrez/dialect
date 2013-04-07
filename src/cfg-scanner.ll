@@ -41,7 +41,7 @@ ASCII [\41-\176]
 
 {ASCII} { SAVE_TOKEN; return LHS; }
 
-"-->" { SAVE_TOKEN; return ARROW; }
+"-->" { return ARROW; }
 
 {ASCII}+ { SAVE_TOKEN; return RHS; }
 

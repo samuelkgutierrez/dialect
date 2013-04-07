@@ -22,9 +22,13 @@
 #include "config.h"
 #endif
 
+#include <iostream>
 #include <string>
 #include <vector>
 
+/* ////////////////////////////////////////////////////////////////////////// */
+/* context-free grammar production class */
+/* ////////////////////////////////////////////////////////////////////////// */
 class CFGProduction {
 private:
     /* left-hand side of production */
@@ -36,8 +40,11 @@ public:
     CFGProduction(void) { /* nothing to do */; }
 
     CFGProduction(std::string lhs,
-                  std::string rhs) :
-        leftHandSide(lhs), rightHandSide(rhs) { ; }
+                  std::string rhs = "epsilon") :
+        leftHandSide(lhs), rightHandSide(rhs) {
+            std::cout << "P: " << this->leftHandSide << " "
+                      << this->rightHandSide << std::endl;
+        }
 
     ~CFGProduction(void) { /* nothing to do */; }
 
