@@ -63,7 +63,7 @@ parseCFG(string what)
         string estr = "cannot open: " + what + ". why: " + strerror(err) + ".";
         throw DialectException(DIALECT_WHERE, estr);
     }
-    if (0 != parserParse(stdin)) {
+    if (0 != parserParse(fp)) {
         string estr = "error encountered during CFG parse. cannot continue.";
         throw DialectException(DIALECT_WHERE, estr);
     }

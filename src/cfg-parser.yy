@@ -42,7 +42,7 @@ CFG *cfg = NULL;
 
 %token <str> RHS
 %token <str> LHS
-%token NEWLINE ARROW
+%token NEWLINE ARROW COMMENT
 
 %start cfg
 
@@ -50,6 +50,12 @@ CFG *cfg = NULL;
 
 cfg : productions {
           return 0;
+      }
+    | COMMENT productions {
+          ;
+      }
+    | COMMENT {
+          ;
       }
     ;
 

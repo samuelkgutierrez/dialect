@@ -19,6 +19,8 @@
 
 %option interactive noyywrap nounput
 
+%option debug
+
 %{
 
 #include <iostream>
@@ -39,7 +41,11 @@ LHSASCII [A-Z]
 /* the ascii characters that we care about in octal */
 ASCII [\41-\176]
 
+WS [ \t]
+
 %%
+
+"#".*"\n" { return COMMENT; }
 
 {LHSASCII} { SAVE_TOKEN; return LHS; }
 
@@ -47,7 +53,7 @@ ASCII [\41-\176]
 
 {ASCII}+ { SAVE_TOKEN; return RHS; }
 
-[ \t] { ; }
+{WS} { ; }
 
 "\n" { return NEWLINE; }
 
