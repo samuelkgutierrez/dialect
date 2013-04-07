@@ -21,6 +21,7 @@
 
 #include "CFG.hxx"
 
+#include <cstdlib>
 #include <iostream>
 #include <string>
 #include <cstdlib>
@@ -48,18 +49,13 @@ CFG *cfg = NULL;
 
 %%
 
-cfg : productions {
-          return 0;
-      }
-    ;
+cfg : /* empty */
+    | cfg productions
+;
 
-productions : production NEWLINE {
-                  ;
-              }
-            | productions production NEWLINE {
-                  ;
-              }
-            ;
+productions : NEWLINE
+            | production NEWLINE
+;
 
 production : LHS ARROW RHS {
                  cfgProductions.push_back(CFGProduction(*$1, *$3));
@@ -70,8 +66,7 @@ production : LHS ARROW RHS {
                  cfgProductions.push_back(CFGProduction(*$1));
                  delete $1;
              }
-           | { }
-           ;
+;
 
 %%
 
@@ -80,6 +75,8 @@ production : LHS ARROW RHS {
 int
 parserParse(FILE *fp = NULL)
 {
+    /* set YYDEBUG to anything for more parser debug output */
+    yydebug = !!getenv("YYDEBUG");
     yyin = fp;
     /* fp closed by caller */
     return yyparse();
