@@ -25,6 +25,7 @@
 #include <iostream>
 #include <string>
 #include <vector>
+#include <set>
 
 /* ////////////////////////////////////////////////////////////////////////// */
 /* context-free grammar production class */
@@ -63,8 +64,12 @@ private:
     bool verbose;
     /* the start of the CFG */
     std::string startSymbol;
-    /* list of ALL productions */
+    /* list of ALL productions discovered during parse */
     std::vector<CFGProduction> productions;
+    /* list of terminals in the grammar */
+    std::set<std::string> terminals;
+    /* list of non-terminals in the grammar */
+    std::set<std::string> nonTerminals;
 
 public:
     CFG(void);
@@ -73,9 +78,13 @@ public:
 
     ~CFG(void) { ; }
 
+    std::set<std::string> getNonTerminals(void) const;
+
     void beVerbose(bool v = true) { this->verbose = v; }
 
     void emitAllProductions(void) const;
+
+    void emitAllNonTerminals(void) const;
 
     void emitState(void) const;
 };

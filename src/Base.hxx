@@ -25,7 +25,7 @@
 #include <string>
 #include <iostream>
 
-/* dialect output */
+/* dialect output -- what a hack */
 #define dout std::cout << "c "
 
 class Base {

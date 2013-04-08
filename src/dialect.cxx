@@ -103,7 +103,9 @@ main(int argc, char **argv)
         echoHeader();
         parseCFG(cfgDescription);
         contextFreeGrammar->beVerbose();
-        contextFreeGrammar->emitState();
+        if (verboseMode) {
+            contextFreeGrammar->emitState();
+        }
     }
     catch (DialectException &e) {
         cerr << e.what() << endl;

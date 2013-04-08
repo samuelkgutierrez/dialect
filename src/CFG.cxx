@@ -22,10 +22,11 @@
 
 #include <string>
 #include <vector>
+#include <algorithm>
 
 using namespace std;
 
-const string CFGProduction::EPSILON = "\b";
+const string CFGProduction::EPSILON = " ";
 
 /* ////////////////////////////////////////////////////////////////////////// */
 ostream &
@@ -50,6 +51,7 @@ CFG::CFG(vector<CFGProduction> productions)
     this->productions = productions;
     firstProduction = *this->productions.begin();
     this->startSymbol = firstProduction.lhs();
+    this->nonTerminals = this->getNonTerminals();
 }
 
 /* ////////////////////////////////////////////////////////////////////////// */
@@ -66,12 +68,47 @@ CFG::emitAllProductions(void) const
 
 /* ////////////////////////////////////////////////////////////////////////// */
 void
+CFG::emitAllNonTerminals(void) const
+{
+    set<string>::const_iterator nonTerm;
+
+    for (nonTerm = this->nonTerminals.begin();
+         this->nonTerminals.end() != nonTerm;
+         ++nonTerm) {
+        dout << "  " << *nonTerm << endl;
+    }
+}
+
+
+/* ////////////////////////////////////////////////////////////////////////// */
+void
 CFG::emitState(void) const
 {
     dout << endl;
     dout << "start symbol: " << this->startSymbol << endl;
+    dout << "non-terminals begin" << endl;
+    this->emitAllNonTerminals();
+    dout << "non-terminals end" << endl;
     dout << "productions begin" << endl;
     this->emitAllProductions();
     dout << "productions end" << endl;
     dout << endl;
+}
+
+/* ////////////////////////////////////////////////////////////////////////// */
+/* this is easy because we know that only non-terminals are going to be on the
+ * left-hand side of all of our productions. just iterate over all the
+ * productions and stash the left-hand sides. */
+set<string>
+CFG::getNonTerminals(void) const
+{
+    set<string> nonTerms;
+    vector<CFGProduction>::const_iterator production;
+
+    for (production = this->productions.begin();
+         this->productions.end() != production;
+         ++production) {
+        nonTerms.insert(production->lhs());
+    }
+    return nonTerms;
 }
