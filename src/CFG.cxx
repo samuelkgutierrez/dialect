@@ -52,6 +52,7 @@ CFG::CFG(vector<CFGProduction> productions)
     firstProduction = *this->productions.begin();
     this->startSymbol = firstProduction.lhs();
     this->nonTerminals = this->getNonTerminals();
+    this->terminals = this->getTerminals();
 }
 
 /* ////////////////////////////////////////////////////////////////////////// */
@@ -78,7 +79,6 @@ CFG::emitAllNonTerminals(void) const
         dout << "  " << *nonTerm << endl;
     }
 }
-
 
 /* ////////////////////////////////////////////////////////////////////////// */
 void
@@ -111,4 +111,14 @@ CFG::getNonTerminals(void) const
         nonTerms.insert(production->lhs());
     }
     return nonTerms;
+}
+
+/* ////////////////////////////////////////////////////////////////////////// */
+set<string>
+CFG::getTerminals(void) const
+{
+    set<string> terms;
+
+    return terms;
+
 }

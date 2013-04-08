@@ -80,6 +80,8 @@ public:
 
     std::set<std::string> getNonTerminals(void) const;
 
+    std::set<std::string> getTerminals(void) const;
+
     void beVerbose(bool v = true) { this->verbose = v; }
 
     void emitAllProductions(void) const;
