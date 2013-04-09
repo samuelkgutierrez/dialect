@@ -37,26 +37,22 @@ do {                                                                           \
 
 %}
 
-/* left-hand sides can only be capital letters */
-LHSASCII [A-Z]
-/* the ascii characters that we care about in octal */
+/* range of valid term ascii characters in octal */
 ASCII [\41-\176]
 
 WS [ \t]
 
 %%
 
-"#".+"\n" { return COMMENT; }
-
 {WS}+ { ; }
 
 "\n" { return NEWLINE; }
 
-{LHSASCII} { SAVE_TOKEN; return LHS; }
+"#".*"\n" { return COMMENT; }
 
 "-->" { return ARROW; }
 
-{ASCII}+ { SAVE_TOKEN; return RHS; }
+{ASCII}+ { SAVE_TOKEN; return TERM; }
 
 . { std::cerr << "invalid token encountered during CFG scan... bye!"
               << std::endl;

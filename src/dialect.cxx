@@ -30,6 +30,7 @@
 #include "cfg-parser.h"
 
 extern int parserParse(FILE *fp);
+/* can safely be used AFTER call to parseCFG */
 extern CFG *contextFreeGrammar;
 
 using namespace std;
@@ -101,11 +102,14 @@ main(int argc, char **argv)
     }
     try {
         echoHeader();
+        /* do this before we ever touch contextFreeGrammar */
         parseCFG(cfgDescription);
         contextFreeGrammar->beVerbose();
         if (verboseMode) {
             contextFreeGrammar->emitState();
         }
+        delete contextFreeGrammar;
+        /* done! */
     }
     catch (DialectException &e) {
         cerr << e.what() << endl;

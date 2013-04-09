@@ -38,14 +38,26 @@ int lineNo = 1;
 /* list of productions */
 std::vector<CFGProduction> cfgProductions;
 
+/* ////////////////////////////////////////////////////////////////////////// */
+static int
+nonTermOkay(const std::string &nonTerm)
+{
+    if (1 != nonTerm.length()) {
+        std::cerr << "non-terminals must be exactly one ASCII "
+                  << "character. please fix error at line: " << lineNo
+                  << std::endl;
+        return false;
+    }
+    return true;
+}
+
 %}
 
 %union {
     std::string *str;
 }
 
-%token <str> RHS
-%token <str> LHS
+%token <str> TERM
 %token <contextFreeGrammar>
 %token NEWLINE ARROW COMMENT
 
@@ -60,16 +72,22 @@ productions : /* empty */
             | productions production
 ;
 
-production : NEWLINE       { lineNo++; }
-           | COMMENT       { lineNo++; }
-           | prule NEWLINE { lineNo++; }
+production : NEWLINE { lineNo++; }
+           | COMMENT { lineNo++; }
+           | prule   { lineNo++; }
 
-prule : LHS ARROW RHS {
+prule : TERM ARROW TERM NEWLINE {
+            if (!nonTermOkay(*$1)) {
+                return 1;
+            }
             cfgProductions.push_back(CFGProduction(*$1, *$3));
             delete $1;
             delete $3;
         }
-      | LHS ARROW {
+      | TERM ARROW NEWLINE {
+            if (!nonTermOkay(*$1)) {
+                return 1;
+            }
             cfgProductions.push_back(CFGProduction(*$1));
             delete $1;
         }
@@ -100,3 +118,4 @@ yyerror(const char *s)
     /* ignored */
     return 42;
 }
+

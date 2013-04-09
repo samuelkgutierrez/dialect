@@ -26,6 +26,9 @@
 
 using namespace std;
 
+/* this is okay because our parser makes sure that we can never get a space on
+ * either side of any production rule. if this ever changes, then this "special"
+ * character will need to be changed. */
 const string CFGProduction::EPSILON = " ";
 
 /* ////////////////////////////////////////////////////////////////////////// */
@@ -56,27 +59,14 @@ CFG::CFG(vector<CFGProduction> productions)
 }
 
 /* ////////////////////////////////////////////////////////////////////////// */
+template <typename T>
 void
-CFG::emitAllProductions(void) const
+CFG::emitAllMembers(const T &t) const
 {
-    vector<CFGProduction>::const_iterator production;
-    for (production = this->productions.begin();
-         this->productions.end() != production;
-         ++production) {
-        dout << "  " << *production << endl;
-    }
-}
+    typename T::const_iterator member;
 
-/* ////////////////////////////////////////////////////////////////////////// */
-void
-CFG::emitAllNonTerminals(void) const
-{
-    set<string>::const_iterator nonTerm;
-
-    for (nonTerm = this->nonTerminals.begin();
-         this->nonTerminals.end() != nonTerm;
-         ++nonTerm) {
-        dout << "  " << *nonTerm << endl;
+    for (member = t.begin(); t.end() != member; ++member) {
+        dout << "  " << *member << endl;
     }
 }
 
@@ -86,12 +76,19 @@ CFG::emitState(void) const
 {
     dout << endl;
     dout << "start symbol: " << this->startSymbol << endl;
+
     dout << "non-terminals begin" << endl;
-    this->emitAllNonTerminals();
+    this->emitAllMembers(this->nonTerminals);
     dout << "non-terminals end" << endl;
+
+    dout << "terminals begin" << endl;
+    this->emitAllMembers(this->terminals);
+    dout << "terminals end" << endl;
+
     dout << "productions begin" << endl;
-    this->emitAllProductions();
+    this->emitAllMembers(this->productions);
     dout << "productions end" << endl;
+
     dout << endl;
 }
 
@@ -114,11 +111,33 @@ CFG::getNonTerminals(void) const
 }
 
 /* ////////////////////////////////////////////////////////////////////////// */
+/* this is also pretty easy because once we have all of our non-terminals,
+ * everything that is left must be terminals. */
 set<string>
 CFG::getTerminals(void) const
 {
+    vector<CFGProduction>::const_iterator production;
+    /* set of all right-hand side symbols */
+    set<string> allRHSSymbols;
+    /* the result */
     set<string> terms;
 
-    return terms;
+    for (production = this->productions.begin();
+         this->productions.end() != production;
+         ++production) {
+        /* the right-hand side is going to be a string of symbols. we need to
+         * split those up first because each right-hand side can contain many
+         * symbols. */
+        string rhsString = production->rhs();
+        for (unsigned c = 0; c < rhsString.length(); ++c) {
+            allRHSSymbols.insert(string(&rhsString[c], 1));
+        }
+    }
+    /* now that we have all the rhs symbols in a set, get the set of terminals
+     * by simply taking the set difference of allRHSSymbols and nonTerminals */
+    set_difference(allRHSSymbols.begin(), allRHSSymbols.end(),
+                   this->nonTerminals.begin(), this->nonTerminals.end(),
+                   inserter(terms, terms.end()));
 
+    return terms;
 }

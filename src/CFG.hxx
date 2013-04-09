@@ -84,11 +84,9 @@ public:
 
     void beVerbose(bool v = true) { this->verbose = v; }
 
-    void emitAllProductions(void) const;
-
-    void emitAllNonTerminals(void) const;
-
     void emitState(void) const;
+
+    template <typename T> void emitAllMembers(const T &t) const;
 };
 
 #endif
