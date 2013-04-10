@@ -104,12 +104,13 @@ main(int argc, char **argv)
         echoHeader();
         /* do this before we ever touch contextFreeGrammar */
         parseCFG(cfgDescription);
-        contextFreeGrammar->beVerbose();
         if (verboseMode) {
+            contextFreeGrammar->beVerbose();
             contextFreeGrammar->emitState();
         }
-        delete contextFreeGrammar;
+        contextFreeGrammar->clean();
         /* done! */
+        delete contextFreeGrammar;
     }
     catch (DialectException &e) {
         cerr << e.what() << endl;

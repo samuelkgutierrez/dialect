@@ -50,8 +50,12 @@ CFG::CFG(vector<CFGProduction> productions)
 {
     CFGProduction firstProduction;
 
+    /* the order here matters. we need to first calculate the non-terminals
+     * because the getTerminals code uses nonTerminals to determine the
+     * terminals set. */
     this->verbose = false;
-    this->productions = productions;
+    /* initially start with given productions */
+    this->productions = this->cleanProductions = productions;
     firstProduction = *this->productions.begin();
     this->startSymbol = firstProduction.lhs();
     this->nonTerminals = this->getNonTerminals();
@@ -140,4 +144,33 @@ CFG::getTerminals(void) const
                    inserter(terms, terms.end()));
 
     return terms;
+}
+
+/* ////////////////////////////////////////////////////////////////////////// */
+vector<CFGProduction>
+CFG::rmNonGeneratingVars(const vector<CFGProduction> &old)
+{
+    vector<CFGProduction> newProds;
+
+    return newProds;
+}
+
+/* ////////////////////////////////////////////////////////////////////////// */
+vector<CFGProduction>
+CFG::rmUnreachableVars(const vector<CFGProduction> &old)
+{
+    vector<CFGProduction> newProds;
+
+    return newProds;
+}
+
+/* ////////////////////////////////////////////////////////////////////////// */
+void
+CFG::clean(void)
+{
+    /* the order of this matters. first we find and remove non-generating
+     * productions and their rules and then we do the same for non-reachable
+     * variables. */
+    this->cleanProductions = this->rmNonGeneratingVars(this->productions);
+    this->cleanProductions = this->rmUnreachableVars(this->cleanProductions);
 }

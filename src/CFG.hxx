@@ -66,6 +66,8 @@ private:
     std::string startSymbol;
     /* list of ALL productions discovered during parse */
     std::vector<CFGProduction> productions;
+    /* list of productions after grammar hygiene */
+    std::vector<CFGProduction> cleanProductions;
     /* list of terminals in the grammar */
     std::set<std::string> terminals;
     /* list of non-terminals in the grammar */
@@ -87,6 +89,14 @@ public:
     void emitState(void) const;
 
     template <typename T> void emitAllMembers(const T &t) const;
+    /* removes non-generating variables from the instance */
+    std::vector<CFGProduction>
+    rmNonGeneratingVars(const std::vector<CFGProduction> &old);
+    /* removes unreachable variables from the instance */
+    std::vector<CFGProduction>
+    rmUnreachableVars(const std::vector<CFGProduction> &old);
+    /* performs grammar hygiene operations on the calling instance */
+    void clean(void);
 };
 
 #endif
