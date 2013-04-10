@@ -36,4 +36,4 @@ ${PARSER_FILES}
 
 dialect_SOURCES = \
 ${BASE_SRC} \
-dialect.cxx
+Dialect.cxx
