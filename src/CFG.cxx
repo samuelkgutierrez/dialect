@@ -42,9 +42,7 @@ bool
 operator==(const Symbol &s1,
            const Symbol &s2)
 {
-    return s1.symbol == s2.symbol &&
-           s1.marker == s2.marker &&
-           s1.terminal == s2.terminal;
+    return s1.symbol == s2.symbol;
 }
 
 /* ////////////////////////////////////////////////////////////////////////// */
@@ -87,9 +85,12 @@ operator<<(ostream &out,
 CFGProduction::CFGProduction(const string &lhs,
                              const string &rhs)
 {
-    this->leftHandSide = Symbol(lhs);
+    /* left-hand side symbols are always non-terminals. */
+    this->leftHandSide = Symbol(lhs, true, false);
     for (unsigned i = 0; i < rhs.length(); ++i) {
-        this->rightHandSide.push_back(Symbol(string(&rhs[i], 1)));
+        /* at this point we don't know what type the symbols are on the rhs, so
+         * just mark them all as terminals to start. */
+        this->rightHandSide.push_back(Symbol(string(&rhs[i], 1), true, true));
     }
 }
 

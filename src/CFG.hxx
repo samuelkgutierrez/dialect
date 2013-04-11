@@ -42,11 +42,15 @@ private:
 public:
     static const std::string EPSILON;
     /* all "valid" symbols will be exactly one character in length */
-    Symbol(void) : marker(false), symbol("_0xDEADBEEF_"), terminal(true) { ; }
+    Symbol(void) : marker(false),
+                   symbol("_0xDEADBEEF_"),
+                   terminal(false) { ; }
 
     Symbol(const std::string &sym,
-           bool marked = false) :
-        marker(marked), symbol(sym), terminal(true) { ; }
+           bool marked = false,
+           bool isTerminal = false) : marker(marked),
+                                      symbol(sym),
+                                      terminal(isTerminal) { ; }
 
     ~Symbol(void) { ; }
 
@@ -55,13 +59,17 @@ public:
     bool marked(void) const { return this->marker; }
 
     void mark(bool m = true) { this->marker = m; }
+
+    bool isTerminal(void) const { return this->terminal; }
+
+    void setIsTerminal(bool is) { this->terminal = is; }
     /* == */
     friend bool operator==(const Symbol &s1,
                            const Symbol &s2);
     /* < */
     friend bool operator<(const Symbol &s1,
                           const Symbol &s2);
-
+    /* << */
     friend std::ostream & operator<<(std::ostream &out,
                                      const Symbol &symbol);
 };
