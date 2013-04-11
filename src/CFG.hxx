@@ -79,8 +79,8 @@ private:
 public:
     CFGProduction(void) { /* nothing to do */; }
 
-    CFGProduction(std::string lhs,
-                  std::string rhs = Symbol::EPSILON);
+    CFGProduction(const std::string &lhs,
+                  const std::string &rhs = Symbol::EPSILON);
 
     ~CFGProduction(void) { /* nothing to do */; }
 
