@@ -28,28 +28,65 @@
 #include <set>
 
 /* ////////////////////////////////////////////////////////////////////////// */
+/* symbol class */
+/* ////////////////////////////////////////////////////////////////////////// */
+class Symbol {
+private:
+    /* general marker for a symbol */
+    bool marker;
+    /* string representation of the grammar symbol */
+    std::string symbol;
+    /* flag indicating whether or not this symbol is a terminal symbol */
+    bool terminal;
+
+public:
+    static const std::string EPSILON;
+    /* all "valid" symbols will be exactly one character in length */
+    Symbol(void) : marker(false), symbol("_0xDEADBEEF_"), terminal(true) { ; }
+
+    Symbol(const std::string &sym,
+           bool marked = false) :
+        marker(marked), symbol(sym), terminal(true) { ; }
+
+    ~Symbol(void) { ; }
+
+    std::string sym(void) const { return this->symbol; }
+
+    bool marked(void) const { return this->marker; }
+
+    void mark(bool m = true) { this->marker = m; }
+    /* == */
+    friend bool operator==(const Symbol &s1,
+                           const Symbol &s2);
+    /* < */
+    friend bool operator<(const Symbol &s1,
+                          const Symbol &s2);
+
+    friend std::ostream & operator<<(std::ostream &out,
+                                     const Symbol &symbol);
+};
+
+/* ////////////////////////////////////////////////////////////////////////// */
 /* context-free grammar production class */
 /* ////////////////////////////////////////////////////////////////////////// */
 class CFGProduction {
 private:
-    static const std::string EPSILON;
     /* left-hand side of production */
-    std::string leftHandSide;
+    Symbol leftHandSide;
     /* right-hand side of production */
-    std::string rightHandSide;
+    std::vector<Symbol> rightHandSide;
 
 public:
     CFGProduction(void) { /* nothing to do */; }
 
     CFGProduction(std::string lhs,
-                  std::string rhs = CFGProduction::EPSILON) :
-        leftHandSide(lhs), rightHandSide(rhs) { ; }
+                  std::string rhs = Symbol::EPSILON);
 
     ~CFGProduction(void) { /* nothing to do */; }
 
-    std::string lhs(void) const { return this->leftHandSide; }
+    Symbol lhs(void) const { return this->leftHandSide; }
 
-    std::string rhs(void) const { return this->rightHandSide; }
+    std::vector<Symbol> rhs(void) const { return this->rightHandSide; }
 
     friend std::ostream &operator<<(std::ostream &out,
                                     const CFGProduction &production);
@@ -63,15 +100,15 @@ private:
     /* flag indicating whether or not to emit debug output to stdout */
     bool verbose;
     /* the start of the CFG */
-    std::string startSymbol;
+    Symbol startSymbol;
     /* list of ALL productions discovered during parse */
     std::vector<CFGProduction> productions;
     /* list of productions after grammar hygiene */
     std::vector<CFGProduction> cleanProductions;
     /* list of terminals in the grammar */
-    std::set<std::string> terminals;
+    std::set<Symbol> terminals;
     /* list of non-terminals in the grammar */
-    std::set<std::string> nonTerminals;
+    std::set<Symbol> nonTerminals;
 
 public:
     CFG(void);
@@ -80,9 +117,9 @@ public:
 
     ~CFG(void) { ; }
 
-    std::set<std::string> getNonTerminals(void) const;
+    std::set<Symbol> getNonTerminals(void) const;
 
-    std::set<std::string> getTerminals(void) const;
+    std::set<Symbol> getTerminals(void) const;
 
     void beVerbose(bool v = true) { this->verbose = v; }
 

@@ -15,8 +15,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "Base.hxx"
 #include "CFG.hxx"
+#include "Base.hxx"
 #include "Constants.hxx"
 #include "DialectException.hxx"
 
@@ -26,18 +26,79 @@
 
 using namespace std;
 
+/* ////////////////////////////////////////////////////////////////////////// */
+/* ////////////////////////////////////////////////////////////////////////// */
+/* Symbol */
+/* ////////////////////////////////////////////////////////////////////////// */
+/* ////////////////////////////////////////////////////////////////////////// */
+
 /* this is okay because our parser makes sure that we can never get a space on
  * either side of any production rule. if this ever changes, then this "special"
  * character will need to be changed. */
-const string CFGProduction::EPSILON = " ";
+const string Symbol::EPSILON = " ";
+
+/* ////////////////////////////////////////////////////////////////////////// */
+bool
+operator==(const Symbol &s1,
+           const Symbol &s2)
+{
+    return s1.symbol == s2.symbol &&
+           s1.marker == s2.marker &&
+           s1.terminal == s2.terminal;
+}
+
+/* ////////////////////////////////////////////////////////////////////////// */
+/* < */
+bool
+operator<(const Symbol &s1,
+          const Symbol &s2)
+{
+    return s1.symbol < s2.symbol;
+}
 
 /* ////////////////////////////////////////////////////////////////////////// */
 ostream &
-operator<<(ostream &out, const CFGProduction &production)
+operator<<(ostream &out,
+           const Symbol &symbol)
 {
-    out << production.leftHandSide << " --> " << production.rightHandSide;
+    out << symbol.symbol;
     return out;
 }
+
+/* ////////////////////////////////////////////////////////////////////////// */
+/* ////////////////////////////////////////////////////////////////////////// */
+/* CFGProduction */
+/* ////////////////////////////////////////////////////////////////////////// */
+/* ////////////////////////////////////////////////////////////////////////// */
+ostream &
+operator<<(ostream &out,
+           const CFGProduction &production)
+{
+    out << production.leftHandSide.sym() << " --> ";
+    for (vector<Symbol>::const_iterator p = production.rhs().begin();
+         production.rhs().end() != p;
+         ++p) {
+        cout << p->sym() << " ";
+    }
+
+    return out;
+}
+
+/* ////////////////////////////////////////////////////////////////////////// */
+CFGProduction::CFGProduction(std::string lhs,
+                             std::string rhs)
+{
+    this->leftHandSide = Symbol(lhs);
+    for (unsigned i = 0; i < rhs.length(); ++i) {
+        this->rightHandSide.push_back(Symbol(&rhs[i]));
+    }
+}
+
+/* ////////////////////////////////////////////////////////////////////////// */
+/* ////////////////////////////////////////////////////////////////////////// */
+/* CFG */
+/* ////////////////////////////////////////////////////////////////////////// */
+/* ////////////////////////////////////////////////////////////////////////// */
 
 /* ////////////////////////////////////////////////////////////////////////// */
 CFG::CFG(void)
@@ -57,7 +118,7 @@ CFG::CFG(vector<CFGProduction> productions)
     /* initially start with given productions */
     this->productions = this->cleanProductions = productions;
     firstProduction = *this->productions.begin();
-    this->startSymbol = firstProduction.lhs();
+    this->startSymbol = firstProduction.lhs().sym();
     this->nonTerminals = this->getNonTerminals();
     this->terminals = this->getTerminals();
 }
@@ -79,7 +140,7 @@ void
 CFG::emitState(void) const
 {
     dout << endl;
-    dout << "start symbol: " << this->startSymbol << endl;
+    dout << "start symbol: " << this->startSymbol.sym() << endl;
 
     dout << "non-terminals begin" << endl;
     this->emitAllMembers(this->nonTerminals);
@@ -100,10 +161,10 @@ CFG::emitState(void) const
 /* this is easy because we know that only non-terminals are going to be on the
  * left-hand side of all of our productions. just iterate over all the
  * productions and stash the left-hand sides. */
-set<string>
+set<Symbol>
 CFG::getNonTerminals(void) const
 {
-    set<string> nonTerms;
+    set<Symbol> nonTerms;
     vector<CFGProduction>::const_iterator production;
 
     for (production = this->productions.begin();
@@ -117,24 +178,23 @@ CFG::getNonTerminals(void) const
 /* ////////////////////////////////////////////////////////////////////////// */
 /* this is also pretty easy because once we have all of our non-terminals,
  * everything that is left must be terminals. */
-set<string>
+set<Symbol>
 CFG::getTerminals(void) const
 {
     vector<CFGProduction>::const_iterator production;
     /* set of all right-hand side symbols */
-    set<string> allRHSSymbols;
+    set<Symbol> allRHSSymbols;
     /* the result */
-    set<string> terms;
+    set<Symbol> terms;
 
     for (production = this->productions.begin();
          this->productions.end() != production;
          ++production) {
-        /* the right-hand side is going to be a string of symbols. we need to
-         * split those up first because each right-hand side can contain many
-         * symbols. */
-        string rhsString = production->rhs();
-        for (unsigned c = 0; c < rhsString.length(); ++c) {
-            allRHSSymbols.insert(string(&rhsString[c], 1));
+        vector<Symbol> rhsOfProduction = production->rhs();
+        for (vector<Symbol>::const_iterator sym = rhsOfProduction.begin();
+             rhsOfProduction.end() != sym;
+             ++sym) {
+            allRHSSymbols.insert(*sym);
         }
     }
     /* now that we have all the rhs symbols in a set, get the set of terminals
