@@ -74,23 +74,22 @@ ostream &
 operator<<(ostream &out,
            const CFGProduction &production)
 {
-    out << production.leftHandSide.sym() << " --> ";
+    out << production.leftHandSide << " --> ";
     for (vector<Symbol>::const_iterator p = production.rhs().begin();
          production.rhs().end() != p;
          ++p) {
-        cout << p->sym() << " ";
+        cout << *p;
     }
-
     return out;
 }
 
 /* ////////////////////////////////////////////////////////////////////////// */
-CFGProduction::CFGProduction(std::string lhs,
-                             std::string rhs)
+CFGProduction::CFGProduction(const string &lhs,
+                             const string &rhs)
 {
     this->leftHandSide = Symbol(lhs);
     for (unsigned i = 0; i < rhs.length(); ++i) {
-        this->rightHandSide.push_back(Symbol(&rhs[i]));
+        this->rightHandSide.push_back(Symbol(string(&rhs[i], 1)));
     }
 }
 
