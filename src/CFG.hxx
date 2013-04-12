@@ -148,7 +148,7 @@ public:
     template <typename T> void emitAllMembers(const T &t) const;
     /* removes non-generating variables from the instance */
     CFGProductions
-    rmNonGeneratingVars(const CFGProductions &old) const;
+    rmNonGeneratingSyms(const CFGProductions &old) const;
     /* removes unreachable variables from the instance */
     CFGProductions
     rmUnreachableVars(const CFGProductions &old);

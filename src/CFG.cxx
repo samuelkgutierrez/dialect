@@ -253,19 +253,6 @@ CFG::getTerminals(void) const
 }
 
 /* ////////////////////////////////////////////////////////////////////////// */
-/* returns whether or not all left-hand side productions are marked */
-static bool
-allNonTermsMarked(const CFGProductions &productions)
-{
-    for (CFGProductions::const_iterator p = productions.begin();
-         productions.end() != p;
-         ++p) {
-        if (!p->lhs().marked()) return false;
-    }
-    return true;
-}
-
-/* ////////////////////////////////////////////////////////////////////////// */
 static void
 markAllSymbols(CFGProductions &productions,
                const Symbol &symbol)
@@ -294,7 +281,7 @@ markAllSymbols(CFGProductions &productions,
  * done
  */
 CFGProductions
-CFG::rmNonGeneratingVars(const CFGProductions &old) const
+CFG::rmNonGeneratingSyms(const CFGProductions &old) const
 {
     CFGProductions newProds = old;
     /* init the symbol markers by marking all terminals and making sure that
@@ -313,24 +300,42 @@ CFG::rmNonGeneratingVars(const CFGProductions &old) const
             else sym->mark(false);
         }
     }
+    bool hadUpdate;
     do {
-        bool hadUpdate = false;
+        hadUpdate = false;
+        if (this->verbose) {
+            dout << __func__ << ": in main loop" << endl;
+        }
         for (CFGProductions::iterator p = newProds.begin();
              newProds.end() != p;
              ++p) {
-            if (p->rhsMarked()) {
-                cout << *p << " marked!" <<endl;
+            if (!p->lhs().marked() && p->rhsMarked()) {
+                if (this->verbose) {
+                    dout << "marking " << p->lhs() << endl;
+                }
+                /* make sure that we update all instances of lhs()->sym() */
                 markAllSymbols(newProds, p->lhs().sym());
                 hadUpdate = true;
             }
-            else {
-                cout << *p << " NOT marked!" <<endl;
-            }
         }
-        if (!hadUpdate || allNonTermsMarked(newProds)) {
-            break;
+        if (!hadUpdate) {
+            dout << "done!" << endl;
         }
-    } while (true);
+    } while (hadUpdate);
+    if (this->verbose) {
+        dout << __func__ << ": removing non-generating symbols..." << endl;
+    }
+    for (CFGProductions::iterator p = newProds.begin(); newProds.end() != p;) {
+        if (!p->lhs().marked()) {
+            dout << __func__ << ": rm " << *p << endl;
+            p = newProds.erase(p);
+        }
+        else ++p;
+    }
+    if (this->verbose) {
+        dout << __func__ << ": done removing non-generating symbols..." << endl;
+    }
+
     return newProds;
 }
 
@@ -350,6 +355,6 @@ CFG::clean(void)
     /* the order of this matters. first we find and remove non-generating
      * productions and their rules and then we do the same for non-reachable
      * variables. */
-    this->cleanProductions = this->rmNonGeneratingVars(this->productions);
+    this->cleanProductions = this->rmNonGeneratingSyms(this->productions);
     this->cleanProductions = this->rmUnreachableVars(this->cleanProductions);
 }
