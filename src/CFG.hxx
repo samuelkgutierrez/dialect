@@ -110,6 +110,24 @@ public:
 typedef std::vector<CFGProduction> CFGProductions;
 
 /* ////////////////////////////////////////////////////////////////////////// */
+/* production marker classes */
+/* ////////////////////////////////////////////////////////////////////////// */
+class CFGProductionMarker {
+public:
+    virtual void mark(CFGProductions &productions) const = 0;
+};
+
+class GeneratingMarker : public CFGProductionMarker {
+public:
+    virtual void mark(CFGProductions &productions) const;
+};
+
+class ReachabilityMarker : public CFGProductionMarker {
+public:
+    virtual void mark(CFGProductions &productions) const;
+};
+
+/* ////////////////////////////////////////////////////////////////////////// */
 /* context-free grammar class */
 /* ////////////////////////////////////////////////////////////////////////// */
 class CFG {
@@ -148,7 +166,8 @@ public:
     template <typename T> void emitAllMembers(const T &t) const;
     /* removes non-generating variables from the instance */
     CFGProductions
-    rmNonGeneratingSyms(const CFGProductions &old) const;
+    rmNonGeneratingSyms(const CFGProductionMarker &marker,
+                        const CFGProductions &old) const;
     /* removes unreachable variables from the instance */
     CFGProductions
     rmUnreachableVars(const CFGProductions &old);

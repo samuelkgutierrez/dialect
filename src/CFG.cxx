@@ -105,6 +105,33 @@ CFGProduction::rhsMarked(void) const
     return true;
 }
 
+/* ////////////////////////////////////////////////////////////////////////// */
+/* ////////////////////////////////////////////////////////////////////////// */
+/* production marker classes */
+/* ////////////////////////////////////////////////////////////////////////// */
+/* ////////////////////////////////////////////////////////////////////////// */
+
+/* ////////////////////////////////////////////////////////////////////////// */
+void
+GeneratingMarker::mark(CFGProductions &productions) const
+{
+    /* init the symbol markers by marking all terminals and making sure that
+     * non-terminals aren't marked at this point. */
+    for (CFGProductions::iterator p = productions.begin();
+         productions.end() != p;
+         ++p) {
+        p->lhs().mark(false);
+        vector<Symbol> &rhs = p->rhs();
+        for (vector<Symbol>::iterator sym = rhs.begin();
+             rhs.end() != sym;
+             ++sym) {
+            if (sym->isTerminal()) {
+                sym->mark(true);
+            }
+            else sym->mark(false);
+        }
+    }
+}
 
 /* ////////////////////////////////////////////////////////////////////////// */
 /* ////////////////////////////////////////////////////////////////////////// */
@@ -281,26 +308,13 @@ markAllSymbols(CFGProductions &productions,
  * done
  */
 CFGProductions
-CFG::rmNonGeneratingSyms(const CFGProductions &old) const
+CFG::rmNonGeneratingSyms(const CFGProductionMarker &marker,
+                         const CFGProductions &old) const
 {
     CFGProductions newProds = old;
-    /* init the symbol markers by marking all terminals and making sure that
-     * non-terminals aren't marked at this point. */
-    for (CFGProductions::iterator p = newProds.begin();
-         newProds.end() != p;
-         ++p) {
-        p->lhs().mark(false);
-        vector<Symbol> &rhs = p->rhs();
-        for (vector<Symbol>::iterator sym = rhs.begin();
-             rhs.end() != sym;
-             ++sym) {
-            if (sym->isTerminal()) {
-                sym->mark(true);
-            }
-            else sym->mark(false);
-        }
-    }
     bool hadUpdate;
+    /* start by marking all symbols */
+    marker.mark(newProds);
     do {
         hadUpdate = false;
         if (this->verbose) {
@@ -358,6 +372,8 @@ CFG::clean(void)
     /* the order of this matters. first we find and remove non-generating
      * productions and their rules and then we do the same for non-reachable
      * variables. */
-    this->cleanProductions = this->rmNonGeneratingSyms(this->productions);
+    GeneratingMarker gMarker;
+    this->cleanProductions = this->rmNonGeneratingSyms(gMarker,
+                                                       this->productions);
     this->cleanProductions = this->rmUnreachableVars(this->cleanProductions);
 }
