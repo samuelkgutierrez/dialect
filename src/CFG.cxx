@@ -86,12 +86,12 @@ operator<<(ostream &out,
 CFGProduction::CFGProduction(const string &lhs,
                              const string &rhs)
 {
-    /* left-hand side symbols are always non-terminals. */
-    this->leftHandSide = Symbol(lhs, true, false);
+    /* left-hand side symbols are always non-terminals, but we'll just init
+     * everything with similarly. */
+    this->leftHandSide = Symbol(lhs);
     for (unsigned i = 0; i < rhs.length(); ++i) {
-        /* at this point we don't know what type the symbols are on the rhs, so
-         * just mark them all as terminals to start. we'll update them later. */
-        this->rightHandSide.push_back(Symbol(string(&rhs[i], 1), true, true));
+        /* at this point we don't know what type the symbols are. */
+        this->rightHandSide.push_back(Symbol(string(&rhs[i], 1)));
     }
 }
 
@@ -115,7 +115,7 @@ CFG::CFG(const CFGProductions &productions)
     /* we can't assume that the vector of productions that we are being passed
      * is completely valid. that is, some symbol information may be incorrect.
      * so, first take the incomplete productions vector and generate a new,
-     * fully populated production vector that we can "trust." this vector will
+     * fully populated production vector that we can trust. this vector will
      * be built from the parsed CFG, so it may not be "clean." */
     this->productions = this->buildFullyPopulatedGrammar(productions);
     /* get the start symbol */
@@ -217,8 +217,6 @@ CFG::getNonTerminals(void) const
 }
 
 /* ////////////////////////////////////////////////////////////////////////// */
-/* this is also pretty easy because once we have all of our non-terminals,
- * everything that is left must be terminals. */
 set<Symbol>
 CFG::getTerminals(void) const
 {
