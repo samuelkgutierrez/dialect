@@ -38,19 +38,24 @@ private:
     std::string symbol;
     /* flag indicating whether or not this symbol is a terminal symbol */
     bool terminal;
+    /* flag indicating whether or not this symbol is the start symbol */
+    bool start;
 
 public:
     static const std::string EPSILON;
     /* all "valid" symbols will be exactly one character in length */
     Symbol(void) : marker(false),
                    symbol("_0xDEADBEEF_"),
-                   terminal(false) { ; }
+                   terminal(false),
+                   start(false) { ; }
 
     Symbol(const std::string &sym,
            bool marked = false,
-           bool isTerminal = false) : marker(marked),
-                                      symbol(sym),
-                                      terminal(isTerminal) { ; }
+           bool isTerminal = false,
+           bool isStart = false) : marker(marked),
+                                   symbol(sym),
+                                   terminal(isTerminal),
+                                   start(isStart) { ; }
 
     ~Symbol(void) { ; }
 
@@ -63,6 +68,10 @@ public:
     bool isTerminal(void) const { return this->terminal; }
 
     void setIsTerminal(bool is) { this->terminal = is; }
+
+    void setIsStart(bool is = true) { this->start = is; }
+
+    bool isStart(void) const { return this->start; }
     /* == */
     friend bool operator==(const Symbol &s1,
                            const Symbol &s2);

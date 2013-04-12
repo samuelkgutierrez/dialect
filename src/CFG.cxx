@@ -125,9 +125,27 @@ GeneratingMarker::mark(CFGProductions &productions) const
         for (vector<Symbol>::iterator sym = rhs.begin();
              rhs.end() != sym;
              ++sym) {
-            if (sym->isTerminal()) {
-                sym->mark(true);
-            }
+            if (sym->isTerminal()) sym->mark(true);
+            else sym->mark(false);
+        }
+    }
+}
+
+/* ////////////////////////////////////////////////////////////////////////// */
+void
+ReachabilityMarker::mark(CFGProductions &productions) const
+{
+    /* this one is easy. mark the start symbol. */
+    for (CFGProductions::iterator p = productions.begin();
+         productions.end() != p;
+         ++p) {
+        if (p->lhs().isStart()) p->lhs().mark(true);
+        else p->lhs().mark(false);
+        vector<Symbol> &rhs = p->rhs();
+        for (vector<Symbol>::iterator sym = rhs.begin();
+             rhs.end() != sym;
+             ++sym) {
+            if (sym->isStart()) sym->mark(true);
             else sym->mark(false);
         }
     }
@@ -373,6 +391,7 @@ CFG::clean(void)
      * productions and their rules and then we do the same for non-reachable
      * variables. */
     GeneratingMarker gMarker;
+    ReachabilityMarker rMarker;
     this->cleanProductions = this->rmNonGeneratingSyms(gMarker,
                                                        this->productions);
     this->cleanProductions = this->rmUnreachableVars(this->cleanProductions);
