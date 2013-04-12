@@ -107,7 +107,7 @@ CFGProduction::rhsMarked(void) const
 
 /* ////////////////////////////////////////////////////////////////////////// */
 /* ////////////////////////////////////////////////////////////////////////// */
-/* production marker classes */
+/* production marker, eraser classes */
 /* ////////////////////////////////////////////////////////////////////////// */
 /* ////////////////////////////////////////////////////////////////////////// */
 
@@ -148,6 +148,20 @@ ReachabilityMarker::mark(CFGProductions &productions) const
             if (sym->isStart()) sym->mark(true);
             else sym->mark(false);
         }
+    }
+}
+
+/* ////////////////////////////////////////////////////////////////////////// */
+void
+NonGeneratingEraser::erase(CFGProductions &productions) const
+{
+    for (CFGProductions::iterator p = productions.begin();
+         productions.end() != p;) {
+        if (!p->lhs().marked() || !p->rhsMarked()) {
+            dout << "  rm " << *p << endl;
+            p = productions.erase(p);
+        }
+        else ++p;
     }
 }
 
@@ -327,6 +341,7 @@ markAllSymbols(CFGProductions &productions,
  */
 CFGProductions
 CFG::rmNonGeneratingSyms(const CFGProductionMarker &marker,
+                         const CFGProductionEraser &eraser,
                          const CFGProductions &old) const
 {
     CFGProductions newProds = old;
@@ -358,13 +373,7 @@ CFG::rmNonGeneratingSyms(const CFGProductionMarker &marker,
     if (this->verbose) {
         dout << __func__ << ": removing non-generating symbols..." << endl;
     }
-    for (CFGProductions::iterator p = newProds.begin(); newProds.end() != p;) {
-        if (!p->lhs().marked() || !p->rhsMarked()) {
-            dout << "  rm " << *p << endl;
-            p = newProds.erase(p);
-        }
-        else ++p;
-    }
+    eraser.erase(newProds);
     if (this->verbose) {
         dout << __func__ << ": done removing non-generating symbols..." << endl;
         dout << __func__ << ": here is the new cfg:" << endl;
@@ -392,7 +401,8 @@ CFG::clean(void)
      * variables. */
     GeneratingMarker gMarker;
     ReachabilityMarker rMarker;
-    this->cleanProductions = this->rmNonGeneratingSyms(gMarker,
+    NonGeneratingEraser ngEraser;
+    this->cleanProductions = this->rmNonGeneratingSyms(gMarker, ngEraser,
                                                        this->productions);
     this->cleanProductions = this->rmUnreachableVars(this->cleanProductions);
 }

@@ -119,7 +119,7 @@ public:
 typedef std::vector<CFGProduction> CFGProductions;
 
 /* ////////////////////////////////////////////////////////////////////////// */
-/* production marker classes */
+/* production marker, eraser classes */
 /* ////////////////////////////////////////////////////////////////////////// */
 class CFGProductionMarker {
 public:
@@ -134,6 +134,19 @@ public:
 class ReachabilityMarker : public CFGProductionMarker {
 public:
     virtual void mark(CFGProductions &productions) const;
+};
+
+class CFGProductionEraser {
+public:
+    virtual void erase(CFGProductions &productions) const = 0;
+};
+
+class NonGeneratingEraser : public CFGProductionEraser {
+    virtual void erase(CFGProductions &productions) const;
+};
+
+class UnreachableEraser : public CFGProductionEraser {
+    virtual void erase(CFGProductions &productions) const;
 };
 
 /* ////////////////////////////////////////////////////////////////////////// */
@@ -176,6 +189,7 @@ public:
     /* removes non-generating variables from the instance */
     CFGProductions
     rmNonGeneratingSyms(const CFGProductionMarker &marker,
+                        const CFGProductionEraser &eraser,
                         const CFGProductions &old) const;
     /* removes unreachable variables from the instance */
     CFGProductions
