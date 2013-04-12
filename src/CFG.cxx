@@ -311,7 +311,7 @@ CFG::rmNonGeneratingSyms(const CFGProductions &old) const
              ++p) {
             if (!p->lhs().marked() && p->rhsMarked()) {
                 if (this->verbose) {
-                    dout << "marking " << p->lhs() << endl;
+                    dout << "  marking " << p->lhs() << endl;
                 }
                 /* make sure that we update all instances of lhs()->sym() */
                 markAllSymbols(newProds, p->lhs().sym());
@@ -319,23 +319,26 @@ CFG::rmNonGeneratingSyms(const CFGProductions &old) const
             }
         }
         if (!hadUpdate) {
-            dout << "done!" << endl;
+            if (this->verbose) dout << "  done!" << endl;
         }
     } while (hadUpdate);
+
     if (this->verbose) {
         dout << __func__ << ": removing non-generating symbols..." << endl;
     }
     for (CFGProductions::iterator p = newProds.begin(); newProds.end() != p;) {
-        if (!p->lhs().marked()) {
-            dout << __func__ << ": rm " << *p << endl;
+        if (!p->lhs().marked() || !p->rhsMarked()) {
+            dout << "  rm " << *p << endl;
             p = newProds.erase(p);
         }
         else ++p;
     }
     if (this->verbose) {
         dout << __func__ << ": done removing non-generating symbols..." << endl;
+        dout << __func__ << ": here is the new cfg:" << endl;
+        this->emitAllMembers(newProds);
+        dout << endl;
     }
-
     return newProds;
 }
 
