@@ -99,6 +99,8 @@ public:
     std::vector<Symbol> &rhs(void) { return this->rightHandSide; }
 
     std::vector<Symbol> rhs(void) const { return this->rightHandSide; }
+    
+    bool rhsMarked(void) const;
 
     friend std::ostream &operator<<(std::ostream &out,
                                     const CFGProduction &production);
@@ -146,7 +148,7 @@ public:
     template <typename T> void emitAllMembers(const T &t) const;
     /* removes non-generating variables from the instance */
     CFGProductions
-    rmNonGeneratingVars(const CFGProductions &old);
+    rmNonGeneratingVars(const CFGProductions &old) const;
     /* removes unreachable variables from the instance */
     CFGProductions
     rmUnreachableVars(const CFGProductions &old);

@@ -74,9 +74,7 @@ operator<<(ostream &out,
 {
     out << production.leftHandSide << " --> ";
     vector<Symbol>::const_iterator p;
-    for (p = const_cast<CFGProduction &>(production).rhs().begin();
-         const_cast<CFGProduction &>(production).rhs().end() != p;
-         ++p) {
+    for (p = production.rhs().begin(); production.rhs().end() != p; ++p) {
         cout << *p;
     }
     return out;
@@ -94,6 +92,19 @@ CFGProduction::CFGProduction(const string &lhs,
         this->rightHandSide.push_back(Symbol(string(&rhs[i], 1)));
     }
 }
+
+/* ////////////////////////////////////////////////////////////////////////// */
+bool
+CFGProduction::rhsMarked(void) const
+{
+    for (vector<Symbol>::const_iterator sym = this->rhs().begin();
+         this->rhs().end() != sym;
+         ++sym) {
+        if (!sym->marked()) return false;
+    }
+    return true;
+}
+
 
 /* ////////////////////////////////////////////////////////////////////////// */
 /* ////////////////////////////////////////////////////////////////////////// */
@@ -118,6 +129,8 @@ CFG::CFG(const CFGProductions &productions)
      * fully populated production vector that we can trust. this vector will
      * be built from the parsed CFG, so it may not be "clean." */
     this->productions = this->buildFullyPopulatedGrammar(productions);
+    /* init clean with all productions */
+    this->cleanProductions = this->productions;
     /* get the start symbol */
     CFGProduction firstProduction = *this->productions.begin();
     this->startSymbol = firstProduction.lhs();
@@ -240,11 +253,84 @@ CFG::getTerminals(void) const
 }
 
 /* ////////////////////////////////////////////////////////////////////////// */
-CFGProductions
-CFG::rmNonGeneratingVars(const CFGProductions &old)
+/* returns whether or not all left-hand side productions are marked */
+static bool
+allNonTermsMarked(const CFGProductions &productions)
 {
-    CFGProductions newProds;
+    for (CFGProductions::const_iterator p = productions.begin();
+         productions.end() != p;
+         ++p) {
+        if (!p->lhs().marked()) return false;
+    }
+    return true;
+}
 
+/* ////////////////////////////////////////////////////////////////////////// */
+static void
+markAllSymbols(CFGProductions &productions,
+               const Symbol &symbol)
+{
+    for (CFGProductions::iterator p = productions.begin();
+         productions.end() != p;
+         ++p) {
+        if (symbol == p->lhs()) p->lhs().mark(true);
+        vector<Symbol> &rhs = p->rhs();
+        for (vector<Symbol>::iterator sym = rhs.begin();
+             rhs.end() != sym;
+             ++sym) {
+            if (symbol == *sym) sym->mark(true);
+        }
+    }
+}
+
+/* ////////////////////////////////////////////////////////////////////////// */
+/**
+ * general algorithm for removing non-generating symbols:
+ * mark all terminals
+ * while no more markable non-terminals
+ *     if (all symbols on the rhs are marked)
+ *         mark lhs
+ *     fi
+ * done
+ */
+CFGProductions
+CFG::rmNonGeneratingVars(const CFGProductions &old) const
+{
+    CFGProductions newProds = old;
+    /* init the symbol markers by marking all terminals and making sure that
+     * non-terminals aren't marked at this point. */
+    for (CFGProductions::iterator p = newProds.begin();
+         newProds.end() != p;
+         ++p) {
+        p->lhs().mark(false);
+        vector<Symbol> &rhs = p->rhs();
+        for (vector<Symbol>::iterator sym = rhs.begin();
+             rhs.end() != sym;
+             ++sym) {
+            if (sym->isTerminal()) {
+                sym->mark(true);
+            }
+            else sym->mark(false);
+        }
+    }
+    do {
+        bool hadUpdate = false;
+        for (CFGProductions::iterator p = newProds.begin();
+             newProds.end() != p;
+             ++p) {
+            if (p->rhsMarked()) {
+                cout << *p << " marked!" <<endl;
+                markAllSymbols(newProds, p->lhs().sym());
+                hadUpdate = true;
+            }
+            else {
+                cout << *p << " NOT marked!" <<endl;
+            }
+        }
+        if (!hadUpdate || allNonTermsMarked(newProds)) {
+            break;
+        }
+    } while (true);
     return newProds;
 }
 
