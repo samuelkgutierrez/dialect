@@ -70,8 +70,8 @@ public:
     friend bool operator<(const Symbol &s1,
                           const Symbol &s2);
     /* << */
-    friend std::ostream & operator<<(std::ostream &out,
-                                     const Symbol &symbol);
+    friend std::ostream &operator<<(std::ostream &out,
+                                    const Symbol &symbol);
 };
 
 /* ////////////////////////////////////////////////////////////////////////// */
@@ -92,13 +92,20 @@ public:
 
     ~CFGProduction(void) { /* nothing to do */; }
 
+    Symbol &lhs(void) { return this->leftHandSide; }
+
     Symbol lhs(void) const { return this->leftHandSide; }
+
+    std::vector<Symbol> &rhs(void) { return this->rightHandSide; }
 
     std::vector<Symbol> rhs(void) const { return this->rightHandSide; }
 
     friend std::ostream &operator<<(std::ostream &out,
                                     const CFGProduction &production);
+
 };
+/* convenience typedefs */
+typedef std::vector<CFGProduction> CFGProductions;
 
 /* ////////////////////////////////////////////////////////////////////////// */
 /* context-free grammar class */
@@ -110,9 +117,9 @@ private:
     /* the start of the CFG */
     Symbol startSymbol;
     /* list of ALL productions discovered during parse */
-    std::vector<CFGProduction> productions;
+    CFGProductions productions;
     /* list of productions after grammar hygiene */
-    std::vector<CFGProduction> cleanProductions;
+    CFGProductions cleanProductions;
     /* list of terminals in the grammar */
     std::set<Symbol> terminals;
     /* list of non-terminals in the grammar */
@@ -121,7 +128,7 @@ private:
 public:
     CFG(void);
 
-    CFG(std::vector<CFGProduction> productions);
+    CFG(const CFGProductions &productions);
 
     ~CFG(void) { ; }
 
@@ -133,13 +140,16 @@ public:
 
     void emitState(void) const;
 
+    CFGProductions
+    buildFullyPopulatedGrammar(const CFGProductions &prods) const;
+
     template <typename T> void emitAllMembers(const T &t) const;
     /* removes non-generating variables from the instance */
-    std::vector<CFGProduction>
-    rmNonGeneratingVars(const std::vector<CFGProduction> &old);
+    CFGProductions
+    rmNonGeneratingVars(const CFGProductions &old);
     /* removes unreachable variables from the instance */
-    std::vector<CFGProduction>
-    rmUnreachableVars(const std::vector<CFGProduction> &old);
+    CFGProductions
+    rmUnreachableVars(const CFGProductions &old);
     /* performs grammar hygiene operations on the calling instance */
     void clean(void);
 };

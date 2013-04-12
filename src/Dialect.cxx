@@ -108,6 +108,7 @@ main(int argc, char **argv)
             contextFreeGrammar->beVerbose();
             contextFreeGrammar->emitState();
         }
+        /* perform grammar hygiene */
         contextFreeGrammar->clean();
         /* done! */
         delete contextFreeGrammar;

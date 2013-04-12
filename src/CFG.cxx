@@ -73,8 +73,9 @@ operator<<(ostream &out,
            const CFGProduction &production)
 {
     out << production.leftHandSide << " --> ";
-    for (vector<Symbol>::const_iterator p = production.rhs().begin();
-         production.rhs().end() != p;
+    vector<Symbol>::const_iterator p;
+    for (p = const_cast<CFGProduction &>(production).rhs().begin();
+         const_cast<CFGProduction &>(production).rhs().end() != p;
          ++p) {
         cout << *p;
     }
@@ -89,7 +90,7 @@ CFGProduction::CFGProduction(const string &lhs,
     this->leftHandSide = Symbol(lhs, true, false);
     for (unsigned i = 0; i < rhs.length(); ++i) {
         /* at this point we don't know what type the symbols are on the rhs, so
-         * just mark them all as terminals to start. */
+         * just mark them all as terminals to start. we'll update them later. */
         this->rightHandSide.push_back(Symbol(string(&rhs[i], 1), true, true));
     }
 }
@@ -107,20 +108,61 @@ CFG::CFG(void)
 }
 
 /* ////////////////////////////////////////////////////////////////////////// */
-CFG::CFG(vector<CFGProduction> productions)
+CFG::CFG(const CFGProductions &productions)
 {
-    CFGProduction firstProduction;
-
-    /* the order here matters. we need to first calculate the non-terminals
-     * because the getTerminals code uses nonTerminals to determine the
-     * terminals set. */
     this->verbose = false;
-    /* initially start with given productions */
-    this->productions = this->cleanProductions = productions;
-    firstProduction = *this->productions.begin();
-    this->startSymbol = firstProduction.lhs().sym();
+
+    /* we can't assume that the vector of productions that we are being passed
+     * is completely valid. that is, some symbol information may be incorrect.
+     * so, first take the incomplete productions vector and generate a new,
+     * fully populated production vector that we can "trust." this vector will
+     * be built from the parsed CFG, so it may not be "clean." */
+    this->productions = this->buildFullyPopulatedGrammar(productions);
+    /* get the start symbol */
+    CFGProduction firstProduction = *this->productions.begin();
+    this->startSymbol = firstProduction.lhs();
+    /* now capture some extra information for nice output */
     this->nonTerminals = this->getNonTerminals();
     this->terminals = this->getTerminals();
+}
+
+/* ////////////////////////////////////////////////////////////////////////// */
+CFGProductions
+CFG::buildFullyPopulatedGrammar(const CFGProductions &productions) const
+{
+    /* fully populated productions */
+    CFGProductions fpp = productions;
+    /* set of non-terminals */
+    set<Symbol> nonTerminals;
+
+    /* first mark all non-terminals on the lhs and add to nonTerminals */
+    for (CFGProductions::iterator prod = fpp.begin();
+         fpp.end() != prod;
+         ++prod) {
+        prod->lhs().setIsTerminal(false);
+        nonTerminals.insert(prod->lhs());
+    }
+    /* now that we know about all the non-terminals, finish setup by updating
+     * the symbols on the right-hand side. */
+    for (CFGProductions::iterator prod = fpp.begin();
+         fpp.end() != prod;
+         ++prod) {
+        vector<Symbol> &rhs = prod->rhs();
+        /* iterate over all the symbols on the rhs */
+        for (vector<Symbol>::iterator sym = rhs.begin();
+             rhs.end() != sym;
+             ++sym) {
+            /* not in set of non-terminals, so must be a terminal */
+            if (nonTerminals.end() == nonTerminals.find(*sym)) {
+                sym->setIsTerminal(true);
+            }
+            /* must be a non-terminal on the rhs */
+            else {
+                sym->setIsTerminal(false);
+            }
+        }
+    }
+    return fpp;
 }
 
 /* ////////////////////////////////////////////////////////////////////////// */
@@ -165,12 +207,11 @@ set<Symbol>
 CFG::getNonTerminals(void) const
 {
     set<Symbol> nonTerms;
-    vector<CFGProduction>::const_iterator production;
 
-    for (production = this->productions.begin();
-         this->productions.end() != production;
-         ++production) {
-        nonTerms.insert(production->lhs());
+    for (CFGProductions::const_iterator p = this->productions.begin();
+         this->productions.end() != p;
+         ++p) {
+        nonTerms.insert(p->lhs());
     }
     return nonTerms;
 }
@@ -181,45 +222,39 @@ CFG::getNonTerminals(void) const
 set<Symbol>
 CFG::getTerminals(void) const
 {
-    vector<CFGProduction>::const_iterator production;
-    /* set of all right-hand side symbols */
-    set<Symbol> allRHSSymbols;
+    CFGProductions::const_iterator production;
     /* the result */
     set<Symbol> terms;
 
     for (production = this->productions.begin();
          this->productions.end() != production;
          ++production) {
-        vector<Symbol> rhsOfProduction = production->rhs();
-        for (vector<Symbol>::const_iterator sym = rhsOfProduction.begin();
-             rhsOfProduction.end() != sym;
+        vector<Symbol> rhs = production->rhs();
+        for (vector<Symbol>::const_iterator sym = rhs.begin();
+             rhs.end() != sym;
              ++sym) {
-            allRHSSymbols.insert(*sym);
+            if (sym->isTerminal()) {
+                terms.insert(*sym);
+            }
         }
     }
-    /* now that we have all the rhs symbols in a set, get the set of terminals
-     * by simply taking the set difference of allRHSSymbols and nonTerminals */
-    set_difference(allRHSSymbols.begin(), allRHSSymbols.end(),
-                   this->nonTerminals.begin(), this->nonTerminals.end(),
-                   inserter(terms, terms.end()));
-
     return terms;
 }
 
 /* ////////////////////////////////////////////////////////////////////////// */
-vector<CFGProduction>
-CFG::rmNonGeneratingVars(const vector<CFGProduction> &old)
+CFGProductions
+CFG::rmNonGeneratingVars(const CFGProductions &old)
 {
-    vector<CFGProduction> newProds;
+    CFGProductions newProds;
 
     return newProds;
 }
 
 /* ////////////////////////////////////////////////////////////////////////// */
-vector<CFGProduction>
-CFG::rmUnreachableVars(const vector<CFGProduction> &old)
+CFGProductions
+CFG::rmUnreachableVars(const CFGProductions &old)
 {
-    vector<CFGProduction> newProds;
+    CFGProductions newProds;
 
     return newProds;
 }
