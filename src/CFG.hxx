@@ -226,6 +226,10 @@ private:
     /* performs prep work for parse table creation */
     void parseTablePrep(void);
 
+    static void propagateFirsts(CFGProductions &productions,
+                                const Symbol &symbol,
+                                const std::set<Symbol> &firstSet);
+
 public:
     CFG(void);
 

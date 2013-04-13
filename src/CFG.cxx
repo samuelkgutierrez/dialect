@@ -438,6 +438,27 @@ CFG::markAllSymbols(CFGProductions &productions,
 }
 
 /* ////////////////////////////////////////////////////////////////////////// */
+void
+CFG::propagateFirsts(CFGProductions &productions,
+                     const Symbol &symbol,
+                     const set<Symbol> &firstSet)
+{
+    for (CFGProductions::iterator p = productions.begin();
+         productions.end() != p;
+         ++p) {
+        if (symbol == p->lhs()) p->lhs().firsts() = firstSet;
+        vector<Symbol> &rhs = p->rhs();
+        for (vector<Symbol>::iterator sym = rhs.begin();
+             rhs.end() != sym;
+             ++sym) {
+            if (symbol == *sym) sym->firsts() = firstSet;
+        }
+    }
+}
+
+/* ////////////////////////////////////////////////////////////////////////// */
+
+/* ////////////////////////////////////////////////////////////////////////// */
 CFGProductions
 CFG::clean(const CFGProductionMarker &marker,
            const CFGProductionEraser &eraser,
@@ -581,7 +602,10 @@ CFG::initFirstSets(void)
                 /* mark all terminals */
                 sym->mark(true);
                 /* add myself to my firsts if not epsilon 8-| */
-                if (!sym->isEpsilon()) sym->firsts().insert(*sym);
+                sym->firsts().insert(*sym);
+            }
+            else {
+                sym->mark(false);
             }
         }
     }
@@ -592,6 +616,11 @@ void
 CFG::computeFirstSets(void)
 {
     bool hadUpdate;
+
+    if (this->verbose) {
+        dout << __func__ << ": fixed-point begin ***" << endl;
+    }
+
     this->initFirstSets();
     /* start the fixed-point calculation */
     do {
@@ -603,25 +632,54 @@ CFG::computeFirstSets(void)
              this->cleanProductions.end() != p;
              ++p) {
             if (p->rhsMarked() && !p->lhs().marked()) {
+                CFG::propagateFirsts(this->cleanProductions,
+                                     p->lhs().sym(),
+                                     p->lhs().firsts());
+                dout << "00000000000000000000" << endl;
+                dout << *p << endl;
+                dout << "00000000000000000000" << endl;
                 Symbol alpha = *p->rhs().begin();
+                /* no matter what, we are always going to add FIRST(alpha) */
+                p->lhs().firsts().insert(alpha.firsts().begin(),
+                                         alpha.firsts().end());
                 /* if alpha is nullable */
-                if (this->nullableSet.end() == this->nullableSet.find(alpha)) {
-
+                if (this->nullableSet.end() != this->nullableSet.find(alpha)) {
+                    /* need FIRST(alpha) U FIRST(beta) */
+                    vector<Symbol> &rhs = p->rhs();
+                    /* we already have FIRST(alpha), so start at second symbol
+                     */
+                    vector<Symbol>::iterator sym = rhs.begin(); sym++;
+                    for (; rhs.end() != sym; ++sym) {
+                        p->lhs().firsts().insert(sym->firsts().begin(),
+                                                 sym->firsts().end());
+                    }
                 }
-                /* alpha is not nullable, so just add FIRST(alpha) */
-                else {
-                    p->lhs().firsts().insert(alpha.firsts().begin(),
-                                             alpha.firsts().end());
-                }
+                /* else alpha is not nullable, so FIRST(alpha) is all we need */
                 if (this->verbose) {
                     dout << "  marking " << p->lhs() << endl;
                 }
                 CFG::markAllSymbols(this->cleanProductions, p->lhs().sym());
                 hadUpdate = true;
+                dout << "XXXXXXXXXXXXXXXXXXXXXXX" << endl;
+                CFG::emitAllMembers(p->lhs().firsts());
+                dout << "XXXXXXXXXXXXXXXXXXXXXXX" << endl;
             }
         }
         if (!hadUpdate) {
             if (this->verbose) dout << "  done!" << endl;
         }
     } while (hadUpdate);
+
+    if (this->verbose) {
+        dout << __func__ << ": here are the first sets:" << endl;
+        for (CFGProductions::const_iterator p = this->cleanProductions.begin();
+             this->cleanProductions.end() != p;
+             ++p) {
+            dout << p->lhs().sym() << " begin" << endl;
+            CFG::emitAllMembers(p->lhs().firsts());
+            dout << p->lhs().sym() << " end" << endl;
+        }
+        dout << __func__ << ": fixed-point begin ***" << endl;
+        dout << endl;
+    }
 }
