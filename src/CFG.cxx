@@ -155,6 +155,10 @@ ReachabilityMarker::mark(CFGProductions &productions) const
 void
 NonGeneratingEraser::erase(CFGProductions &productions) const
 {
+    /* XXX */
+    if (true) {
+        dout << __func__ << ": removing non-generating symbols..." << endl;
+    }
     for (CFGProductions::iterator p = productions.begin();
          productions.end() != p;) {
         if (!p->lhs().marked() || !p->rhsMarked()) {
@@ -163,6 +167,51 @@ NonGeneratingEraser::erase(CFGProductions &productions) const
         }
         else ++p;
     }
+}
+
+/* ////////////////////////////////////////////////////////////////////////// */
+void
+UnreachableEraser::erase(CFGProductions &productions) const
+{
+    /* XXX */
+    ;
+}
+
+/* ////////////////////////////////////////////////////////////////////////// */
+void
+UnreachableHygiene::go(CFGProductions &productions) const
+{
+}
+
+/* ////////////////////////////////////////////////////////////////////////// */
+void
+NonGeneratingHygiene::go(CFGProductions &productions) const
+{
+    bool hadUpdate;
+    do {
+        hadUpdate = false;
+        /* XXX */
+        if (true) {
+            dout << __func__ << ": in main loop" << endl;
+        }
+        for (CFGProductions::iterator p = productions.begin();
+             productions.end() != p;
+             ++p) {
+            if (!p->lhs().marked() && p->rhsMarked()) {
+                /* XXX */
+                if (true) {
+                    dout << "  marking " << p->lhs() << endl;
+                }
+                /* make sure that we update all instances of lhs()->sym() */
+                CFG::markAllSymbols(productions, p->lhs().sym());
+                hadUpdate = true;
+            }
+        }
+        if (!hadUpdate) {
+            /* XXX */
+            if (true) dout << "  done!" << endl;
+        }
+    } while (hadUpdate);
 }
 
 /* ////////////////////////////////////////////////////////////////////////// */
@@ -312,9 +361,9 @@ CFG::getTerminals(void) const
 }
 
 /* ////////////////////////////////////////////////////////////////////////// */
-static void
-markAllSymbols(CFGProductions &productions,
-               const Symbol &symbol)
+void
+CFG::markAllSymbols(CFGProductions &productions,
+                    const Symbol &symbol)
 {
     for (CFGProductions::iterator p = productions.begin();
          productions.end() != p;
@@ -340,42 +389,20 @@ markAllSymbols(CFGProductions &productions,
  * done
  */
 CFGProductions
-CFG::rmNonGeneratingSyms(const CFGProductionMarker &marker,
-                         const CFGProductionEraser &eraser,
-                         const CFGProductions &old) const
+CFG::clean(const CFGProductionMarker &marker,
+           const CFGProductionEraser &eraser,
+           const CFGProductionHygieneAlgo &algo,
+           const CFGProductions &old) const
 {
     CFGProductions newProds = old;
-    bool hadUpdate;
     /* start by marking all symbols */
     marker.mark(newProds);
-    do {
-        hadUpdate = false;
-        if (this->verbose) {
-            dout << __func__ << ": in main loop" << endl;
-        }
-        for (CFGProductions::iterator p = newProds.begin();
-             newProds.end() != p;
-             ++p) {
-            if (!p->lhs().marked() && p->rhsMarked()) {
-                if (this->verbose) {
-                    dout << "  marking " << p->lhs() << endl;
-                }
-                /* make sure that we update all instances of lhs()->sym() */
-                markAllSymbols(newProds, p->lhs().sym());
-                hadUpdate = true;
-            }
-        }
-        if (!hadUpdate) {
-            if (this->verbose) dout << "  done!" << endl;
-        }
-    } while (hadUpdate);
-
-    if (this->verbose) {
-        dout << __func__ << ": removing non-generating symbols..." << endl;
-    }
+    /* run the hygiene algo */
+    algo.go(newProds);
+    /* erase unproductive productions */
     eraser.erase(newProds);
     if (this->verbose) {
-        dout << __func__ << ": done removing non-generating symbols..." << endl;
+        dout << __func__ << ": done with hygiene..." << endl;
         dout << __func__ << ": here is the new cfg:" << endl;
         this->emitAllMembers(newProds);
         dout << endl;
@@ -400,9 +427,11 @@ CFG::clean(void)
      * productions and their rules and then we do the same for non-reachable
      * variables. */
     GeneratingMarker gMarker;
-    ReachabilityMarker rMarker;
     NonGeneratingEraser ngEraser;
-    this->cleanProductions = this->rmNonGeneratingSyms(gMarker, ngEraser,
-                                                       this->productions);
+    NonGeneratingHygiene ngHygiene;
+
+    ReachabilityMarker rMarker;
+    this->cleanProductions = this->clean(gMarker, ngEraser,
+                                         ngHygiene, this->productions);
     this->cleanProductions = this->rmUnreachableVars(this->cleanProductions);
 }

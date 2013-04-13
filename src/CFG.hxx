@@ -119,7 +119,7 @@ public:
 typedef std::vector<CFGProduction> CFGProductions;
 
 /* ////////////////////////////////////////////////////////////////////////// */
-/* production marker, eraser classes */
+/* production hygiene marker, eraser, and algorithm classes */
 /* ////////////////////////////////////////////////////////////////////////// */
 class CFGProductionMarker {
 public:
@@ -142,11 +142,28 @@ public:
 };
 
 class NonGeneratingEraser : public CFGProductionEraser {
+public:
     virtual void erase(CFGProductions &productions) const;
 };
 
 class UnreachableEraser : public CFGProductionEraser {
+public:
     virtual void erase(CFGProductions &productions) const;
+};
+
+class CFGProductionHygieneAlgo {
+public:
+    virtual void go(CFGProductions &productions) const = 0;
+};
+
+class NonGeneratingHygiene : public CFGProductionHygieneAlgo {
+public:
+    virtual void go(CFGProductions &productions) const;
+};
+
+class UnreachableHygiene : public CFGProductionHygieneAlgo {
+public:
+    virtual void go(CFGProductions &productions) const;
 };
 
 /* ////////////////////////////////////////////////////////////////////////// */
@@ -186,15 +203,16 @@ public:
     buildFullyPopulatedGrammar(const CFGProductions &prods) const;
 
     template <typename T> void emitAllMembers(const T &t) const;
-    /* removes non-generating variables from the instance */
-    CFGProductions
-    rmNonGeneratingSyms(const CFGProductionMarker &marker,
-                        const CFGProductionEraser &eraser,
-                        const CFGProductions &old) const;
+    /* cleans old based on marker, eraser, and algo behavior */
+    CFGProductions clean(const CFGProductionMarker &marker,
+                         const CFGProductionEraser &eraser,
+                         const CFGProductionHygieneAlgo &algo,
+                         const CFGProductions &old) const;
     /* removes unreachable variables from the instance */
-    CFGProductions
-    rmUnreachableVars(const CFGProductions &old);
+    CFGProductions rmUnreachableVars(const CFGProductions &old);
     /* performs grammar hygiene operations on the calling instance */
+    static void markAllSymbols(CFGProductions &productions,
+                               const Symbol &symbol);
     void clean(void);
 };
 
