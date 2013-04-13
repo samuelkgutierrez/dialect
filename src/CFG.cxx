@@ -524,11 +524,14 @@ CFG::computeNullable(void)
 {
     CFGProductions pCopy = this->cleanProductions;
     NullableMarker marker; marker.beVerbose(this->verbose);
+    bool hadUpdate;
 
+    if (this->verbose) {
+        dout << __func__ << ": nullable fixed-point begin ***" << endl;
+    }
     /* init symbol markers for nullable calculation */
     marker.mark(pCopy);
-
-    bool hadUpdate;
+    /* start the fixed-point calculation */
     do {
         hadUpdate = false;
         if (this->verbose) {
@@ -551,4 +554,11 @@ CFG::computeNullable(void)
             if (this->verbose) dout << "  done!" << endl;
         }
     } while (hadUpdate);
+
+    if (this->verbose) {
+        dout << __func__ << ": here are the nullable non-terminals:" << endl;
+        CFG::emitAllMembers(this->nullableSet);
+        dout << __func__ << ": nullable fixed-point end ***" << endl;
+        dout << endl;
+    }
 }
