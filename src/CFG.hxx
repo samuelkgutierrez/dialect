@@ -40,6 +40,8 @@ private:
     bool terminal;
     /* flag indicating whether or not this symbol is the start symbol */
     bool start;
+    /* flag indicating whether or not this symbol is nullable */
+    bool nullable;
 
 public:
     static const std::string EPSILON;
@@ -47,15 +49,18 @@ public:
     Symbol(void) : marker(false),
                    symbol("_0xDEADBEEF_"),
                    terminal(false),
-                   start(false) { ; }
+                   start(false),
+                   nullable(false) { ; }
 
     Symbol(const std::string &sym,
            bool marked = false,
            bool isTerminal = false,
-           bool isStart = false) : marker(marked),
-                                   symbol(sym),
-                                   terminal(isTerminal),
-                                   start(isStart) { ; }
+           bool isStart = false,
+           bool isNullable = false) : marker(marked),
+                                      symbol(sym),
+                                      terminal(isTerminal),
+                                      start(isStart),
+                                      nullable(isNullable) { ; }
 
     ~Symbol(void) { ; }
 
@@ -121,6 +126,8 @@ typedef std::vector<CFGProduction> CFGProductions;
 /* ////////////////////////////////////////////////////////////////////////// */
 /* production hygiene marker, eraser, and algorithm classes */
 /* ////////////////////////////////////////////////////////////////////////// */
+
+/* ////////////////////////////////////////////////////////////////////////// */
 class CFGProductionMarker {
 protected:
     bool verbose;
@@ -140,6 +147,7 @@ public:
     virtual void mark(CFGProductions &productions) const;
 };
 
+/* ////////////////////////////////////////////////////////////////////////// */
 class CFGProductionEraser {
 protected:
     bool verbose;
@@ -159,6 +167,7 @@ public:
     virtual void erase(CFGProductions &productions) const;
 };
 
+/* ////////////////////////////////////////////////////////////////////////// */
 class CFGProductionHygieneAlgo {
 protected:
     bool verbose;
