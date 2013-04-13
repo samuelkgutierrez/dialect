@@ -28,7 +28,7 @@
 #include <cstdlib>
 #include <string>
 
-#include "cfg-parser.h"
+#include "CFGParser.h"
 
 #define SAVE_TOKEN                                                             \
 do {                                                                           \

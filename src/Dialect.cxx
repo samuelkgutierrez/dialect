@@ -27,7 +27,7 @@
 #include "Constants.hxx"
 #include "DialectException.hxx"
 #include "CFG.hxx"
-#include "cfg-parser.h"
+#include "CFGParser.h"
 
 extern int parserParse(FILE *fp);
 /* can safely be used AFTER call to parseCFG */
