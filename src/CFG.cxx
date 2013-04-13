@@ -422,15 +422,6 @@ CFG::markAllSymbols(CFGProductions &productions,
 }
 
 /* ////////////////////////////////////////////////////////////////////////// */
-/**
- * general algorithm for removing non-generating symbols:
- * mark all terminals
- * while no more markable non-terminals
- *     if (all symbols on the rhs are marked)
- *         mark lhs
- *     fi
- * done
- */
 CFGProductions
 CFG::clean(const CFGProductionMarker &marker,
            const CFGProductionEraser &eraser,
@@ -471,9 +462,27 @@ CFG::clean(void)
     UnreachableEraser  rEraser;
     UnreachableHygiene rHygiene;
 
+    /**
+     * general algorithm for removing non-generating symbols:
+     * mark all terminals
+     * while no more markable non-terminals
+     *     if (all symbols on the rhs are marked)
+     *         mark lhs
+     *     fi
+     * done
+     */
     this->cleanProductions = this->clean(gMarker, gEraser,
                                          gHygiene, this->productions);
 
+    /**
+     * general algorithm for removing unreachable symbols
+     * mark the start symbol
+     * while no more markable non-terminals
+     *     if (rhs is marked)
+     *         mark rhs
+     *     fi
+     * done
+     */
     this->cleanProductions = this->clean(rMarker, rEraser,
                                          rHygiene, this->cleanProductions);
 }
