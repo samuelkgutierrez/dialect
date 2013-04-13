@@ -515,7 +515,9 @@ CFG::createParseTable(void)
 void
 CFG::parseTablePrep(void)
 {
+    /* the order of this matters. */
     this->computeNullable();
+    this->computeFirstSets();
 }
 
 /* ////////////////////////////////////////////////////////////////////////// */
@@ -561,4 +563,65 @@ CFG::computeNullable(void)
         dout << __func__ << ": nullable fixed-point end ***" << endl;
         dout << endl;
     }
+}
+
+/* ////////////////////////////////////////////////////////////////////////// */
+void
+CFG::initFirstSets(void)
+{
+    for (CFGProductions::iterator p = this->cleanProductions.begin();
+         this->cleanProductions.end() != p;
+         ++p) {
+        p->lhs().mark(false);
+        vector<Symbol> &rhs = p->rhs();
+        for (vector<Symbol>::iterator sym = rhs.begin();
+             rhs.end() != sym;
+             ++sym) {
+            if (sym->isTerminal()) {
+                /* mark all terminals */
+                sym->mark(true);
+                /* add myself to my firsts if not epsilon 8-| */
+                if (!sym->isEpsilon()) sym->firsts().insert(*sym);
+            }
+        }
+    }
+}
+
+/* ////////////////////////////////////////////////////////////////////////// */
+void
+CFG::computeFirstSets(void)
+{
+    bool hadUpdate;
+    this->initFirstSets();
+    /* start the fixed-point calculation */
+    do {
+        hadUpdate = false;
+        if (this->verbose) {
+            dout << __func__ << ": in main loop" << endl;
+        }
+        for (CFGProductions::iterator p = this->cleanProductions.begin();
+             this->cleanProductions.end() != p;
+             ++p) {
+            if (p->rhsMarked() && !p->lhs().marked()) {
+                Symbol alpha = *p->rhs().begin();
+                /* if alpha is nullable */
+                if (this->nullableSet.end() == this->nullableSet.find(alpha)) {
+
+                }
+                /* alpha is not nullable, so just add FIRST(alpha) */
+                else {
+                    p->lhs().firsts().insert(alpha.firsts().begin(),
+                                             alpha.firsts().end());
+                }
+                if (this->verbose) {
+                    dout << "  marking " << p->lhs() << endl;
+                }
+                CFG::markAllSymbols(this->cleanProductions, p->lhs().sym());
+                hadUpdate = true;
+            }
+        }
+        if (!hadUpdate) {
+            if (this->verbose) dout << "  done!" << endl;
+        }
+    } while (hadUpdate);
 }

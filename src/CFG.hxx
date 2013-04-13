@@ -42,6 +42,8 @@ private:
     bool start;
     /* flag indicating whether or not this symbol is epsilon */
     bool epsilon;
+    /* first set for symbol */
+    std::set<Symbol> firstSet;
 
 public:
     static const std::string EPSILON;
@@ -78,6 +80,9 @@ public:
     bool isStart(void) const { return this->start; }
 
     bool isEpsilon(void) const { return Symbol::EPSILON == this->symbol; }
+
+    std::set<Symbol> &firsts(void) { return this->firstSet; }
+
     /* == */
     friend bool operator==(const Symbol &s1,
                            const Symbol &s2);
@@ -212,6 +217,12 @@ private:
     std::set<Symbol> nonTerminals;
     /* nullable set */
     std::set<Symbol> nullableSet;
+    /* compute nullable set */
+    void computeNullable(void);
+    /* first step when computing first sets */
+    void initFirstSets(void);
+    /* compute first sets */
+    void computeFirstSets(void);
     /* performs prep work for parse table creation */
     void parseTablePrep(void);
 
@@ -247,7 +258,6 @@ public:
 
     void clean(void);
 
-    void computeNullable(void);
 };
 
 #endif
