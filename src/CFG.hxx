@@ -122,8 +122,12 @@ typedef std::vector<CFGProduction> CFGProductions;
 /* production hygiene marker, eraser, and algorithm classes */
 /* ////////////////////////////////////////////////////////////////////////// */
 class CFGProductionMarker {
+protected:
+    bool verbose;
 public:
     virtual void mark(CFGProductions &productions) const = 0;
+
+    void beVerbose(bool v = true) { this->verbose = v; }
 };
 
 class GeneratingMarker : public CFGProductionMarker {
@@ -137,8 +141,12 @@ public:
 };
 
 class CFGProductionEraser {
+protected:
+    bool verbose;
 public:
     virtual void erase(CFGProductions &productions) const = 0;
+
+    void beVerbose(bool v = true) { this->verbose = v; }
 };
 
 class NonGeneratingEraser : public CFGProductionEraser {
@@ -152,8 +160,12 @@ public:
 };
 
 class CFGProductionHygieneAlgo {
+protected:
+    bool verbose;
 public:
     virtual void go(CFGProductions &productions) const = 0;
+
+    void beVerbose(bool v = true) { this->verbose = v; }
 };
 
 class NonGeneratingHygiene : public CFGProductionHygieneAlgo {

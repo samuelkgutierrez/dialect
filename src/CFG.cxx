@@ -155,14 +155,15 @@ ReachabilityMarker::mark(CFGProductions &productions) const
 void
 NonGeneratingEraser::erase(CFGProductions &productions) const
 {
-    /* XXX */
-    if (true) {
+    if (this->verbose) {
         dout << __func__ << ": removing non-generating symbols..." << endl;
     }
     for (CFGProductions::iterator p = productions.begin();
          productions.end() != p;) {
         if (!p->lhs().marked() || !p->rhsMarked()) {
-            dout << "  rm " << *p << endl;
+            if (this->verbose) {
+                dout << "  rm " << *p << endl;
+            }
             p = productions.erase(p);
         }
         else ++p;
@@ -173,14 +174,15 @@ NonGeneratingEraser::erase(CFGProductions &productions) const
 void
 UnreachableEraser::erase(CFGProductions &productions) const
 {
-    /* XXX */
-    if (true) {
+    if (this->verbose) {
         dout << __func__ << ": removing unreachable symbols..." << endl;
     }
     for (CFGProductions::iterator p = productions.begin();
          productions.end() != p;) {
         if (!p->lhs().marked()) {
-            dout << "  rm " << *p << endl;
+            if (this->verbose) {
+                dout << "  rm " << *p << endl;
+            }
             p = productions.erase(p);
         }
         else ++p;
@@ -194,16 +196,14 @@ UnreachableHygiene::go(CFGProductions &productions) const
     bool hadUpdate;
     do {
         hadUpdate = false;
-        /* XXX */
-        if (true) {
+        if (this->verbose) {
             dout << __func__ << ": in main loop" << endl;
         }
         for (CFGProductions::iterator p = productions.begin();
              productions.end() != p;
              ++p) {
             if (p->lhs().marked() && !p->rhsMarked()) {
-                /* XXX */
-                if (true) {
+                if (this->verbose) {
                     dout << "  marking " << endl;
                     CFG::emitAllMembers(p->rhs());
                 }
@@ -217,8 +217,7 @@ UnreachableHygiene::go(CFGProductions &productions) const
             }
         }
         if (!hadUpdate) {
-            /* XXX */
-            if (true) dout << "  done!" << endl;
+            if (this->verbose) dout << "  done!" << endl;
         }
     } while (hadUpdate);
 }
@@ -230,16 +229,14 @@ NonGeneratingHygiene::go(CFGProductions &productions) const
     bool hadUpdate;
     do {
         hadUpdate = false;
-        /* XXX */
-        if (true) {
+        if (this->verbose) {
             dout << __func__ << ": in main loop" << endl;
         }
         for (CFGProductions::iterator p = productions.begin();
              productions.end() != p;
              ++p) {
             if (!p->lhs().marked() && p->rhsMarked()) {
-                /* XXX */
-                if (true) {
+                if (this->verbose) {
                     dout << "  marking " << p->lhs() << endl;
                 }
                 /* make sure that we update all instances of lhs()->sym() */
@@ -248,8 +245,7 @@ NonGeneratingHygiene::go(CFGProductions &productions) const
             }
         }
         if (!hadUpdate) {
-            /* XXX */
-            if (true) dout << "  done!" << endl;
+            if (this->verbose) dout << "  done!" << endl;
         }
     } while (hadUpdate);
 }
@@ -430,7 +426,9 @@ CFG::clean(const CFGProductionMarker &marker,
 {
     CFGProductions newProds = old;
 
-    dout << __func__ << ": grammar hygiene begin ***" << endl;
+    if (this->verbose) {
+        dout << __func__ << ": grammar hygiene begin ***" << endl;
+    }
     /* start by marking all symbols */
     marker.mark(newProds);
     /* run the hygiene algo */
@@ -454,13 +452,13 @@ CFG::clean(void)
     /* the order of this matters. first we find and remove non-generating
      * productions and their rules and then we do the same for non-reachable
      * variables. */
-    GeneratingMarker     gMarker;
-    NonGeneratingEraser  gEraser;
-    NonGeneratingHygiene gHygiene;
+    GeneratingMarker     gMarker;  gMarker.beVerbose(this->verbose);
+    NonGeneratingEraser  gEraser;  gEraser.beVerbose(this->verbose);
+    NonGeneratingHygiene gHygiene; gHygiene.beVerbose(this->verbose);
 
-    ReachabilityMarker rMarker;
-    UnreachableEraser  rEraser;
-    UnreachableHygiene rHygiene;
+    ReachabilityMarker rMarker;  rMarker.beVerbose(this->verbose);
+    UnreachableEraser  rEraser;  rEraser.beVerbose(this->verbose);
+    UnreachableHygiene rHygiene; rHygiene.beVerbose(this->verbose);
 
     /**
      * general algorithm for removing non-generating symbols:
@@ -473,7 +471,6 @@ CFG::clean(void)
      */
     this->cleanProductions = this->clean(gMarker, gEraser,
                                          gHygiene, this->productions);
-
     /**
      * general algorithm for removing unreachable symbols
      * mark the start symbol
