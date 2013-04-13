@@ -153,6 +153,26 @@ ReachabilityMarker::mark(CFGProductions &productions) const
 
 /* ////////////////////////////////////////////////////////////////////////// */
 void
+NullableMarker::mark(CFGProductions &productions) const
+{
+    /* start by marking all epsilons */
+    for (CFGProductions::iterator p = productions.begin();
+         productions.end() != p;
+         ++p) {
+        /* the lhs can't be a terminal, so it can't be epsilon */
+        p->lhs().mark(false);
+        vector<Symbol> &rhs = p->rhs();
+        for (vector<Symbol>::iterator sym = rhs.begin();
+             rhs.end() != sym;
+             ++sym) {
+            if (sym->isEpsilon()) sym->mark(true);
+            else sym->mark(false);
+        }
+    }
+}
+
+/* ////////////////////////////////////////////////////////////////////////// */
+void
 NonGeneratingEraser::erase(CFGProductions &productions) const
 {
     if (this->verbose) {
@@ -482,4 +502,28 @@ CFG::clean(void)
      */
     this->cleanProductions = this->clean(rMarker, rEraser,
                                          rHygiene, this->cleanProductions);
+}
+
+/* ////////////////////////////////////////////////////////////////////////// */
+void
+CFG::createParseTable(void)
+{
+    this->parseTablePrep();
+}
+
+/* ////////////////////////////////////////////////////////////////////////// */
+void
+CFG::parseTablePrep(void)
+{
+    this->computeNullable();
+}
+
+/* ////////////////////////////////////////////////////////////////////////// */
+void
+CFG::computeNullable(void)
+{
+    CFGProductions pCopy = this->cleanProductions;
+
+    NullableMarker marker; marker.beVerbose(this->verbose);
+    marker.mark(pCopy);
 }

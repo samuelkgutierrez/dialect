@@ -110,6 +110,8 @@ main(int argc, char **argv)
         }
         /* perform grammar hygiene */
         contextFreeGrammar->clean();
+        /* create parse table */
+        contextFreeGrammar->createParseTable();
         /* done! */
         delete contextFreeGrammar;
     }

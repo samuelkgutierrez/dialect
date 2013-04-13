@@ -40,8 +40,8 @@ private:
     bool terminal;
     /* flag indicating whether or not this symbol is the start symbol */
     bool start;
-    /* flag indicating whether or not this symbol is nullable */
-    bool nullable;
+    /* flag indicating whether or not this symbol is epsilon */
+    bool epsilon;
 
 public:
     static const std::string EPSILON;
@@ -50,17 +50,16 @@ public:
                    symbol("_0xDEADBEEF_"),
                    terminal(false),
                    start(false),
-                   nullable(false) { ; }
+                   epsilon(false) { ; }
 
     Symbol(const std::string &sym,
            bool marked = false,
            bool isTerminal = false,
-           bool isStart = false,
-           bool isNullable = false) : marker(marked),
-                                      symbol(sym),
-                                      terminal(isTerminal),
-                                      start(isStart),
-                                      nullable(isNullable) { ; }
+           bool isStart = false) : marker(marked),
+                                   symbol(sym),
+                                   terminal(isTerminal),
+                                   start(isStart),
+                                   epsilon(Symbol::EPSILON == symbol) { ; }
 
     ~Symbol(void) { ; }
 
@@ -77,6 +76,8 @@ public:
     void setIsStart(bool is = true) { this->start = is; }
 
     bool isStart(void) const { return this->start; }
+
+    bool isEpsilon(void) const { return Symbol::EPSILON == this->symbol; }
     /* == */
     friend bool operator==(const Symbol &s1,
                            const Symbol &s2);
@@ -147,6 +148,11 @@ public:
     virtual void mark(CFGProductions &productions) const;
 };
 
+class NullableMarker : public CFGProductionMarker {
+public:
+    virtual void mark(CFGProductions &productions) const;
+};
+
 /* ////////////////////////////////////////////////////////////////////////// */
 class CFGProductionEraser {
 protected:
@@ -204,6 +210,10 @@ private:
     std::set<Symbol> terminals;
     /* list of non-terminals in the grammar */
     std::set<Symbol> nonTerminals;
+    /* nullable set */
+    std::set<Symbol> nullableSet;
+    /* performs prep work for parse table creation */
+    void parseTablePrep(void);
 
 public:
     CFG(void);
@@ -220,6 +230,8 @@ public:
 
     void emitState(void) const;
 
+    void createParseTable(void);
+
     CFGProductions
     buildFullyPopulatedGrammar(const CFGProductions &prods) const;
     /* XXX move this to Base */
@@ -234,6 +246,8 @@ public:
                                const Symbol &symbol);
 
     void clean(void);
+
+    void computeNullable(void);
 };
 
 #endif
