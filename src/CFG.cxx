@@ -237,8 +237,6 @@ CFG::CFG(const CFGProductions &productions)
      * fully populated production vector that we can trust. this vector will
      * be built from the parsed CFG, so it may not be "clean." */
     this->productions = this->buildFullyPopulatedGrammar(productions);
-    /* init clean with all productions */
-    this->cleanProductions = this->productions;
     /* get the start symbol */
     CFGProduction firstProduction = *this->productions.begin();
     this->startSymbol = firstProduction.lhs();
@@ -255,6 +253,9 @@ CFG::buildFullyPopulatedGrammar(const CFGProductions &productions) const
     CFGProductions fpp = productions;
     /* set of non-terminals */
     set<Symbol> nonTerminals;
+    /* stash the start symbol */
+    CFGProduction firstProduction = *productions.begin();
+    Symbol startSymbol = firstProduction.lhs();
 
     /* first mark all non-terminals on the lhs and add to nonTerminals */
     for (CFGProductions::iterator prod = fpp.begin();
@@ -262,6 +263,7 @@ CFG::buildFullyPopulatedGrammar(const CFGProductions &productions) const
          ++prod) {
         prod->lhs().setIsTerminal(false);
         nonTerminals.insert(prod->lhs());
+        if (startSymbol == prod->lhs()) prod->lhs().setIsStart(true);
     }
     /* now that we know about all the non-terminals, finish setup by updating
      * the symbols on the right-hand side. */
@@ -281,6 +283,7 @@ CFG::buildFullyPopulatedGrammar(const CFGProductions &productions) const
             else {
                 sym->setIsTerminal(false);
             }
+            if (startSymbol == *sym) sym->setIsStart(true);
         }
     }
     return fpp;
@@ -401,6 +404,7 @@ CFG::clean(const CFGProductionMarker &marker,
     algo.go(newProds);
     /* erase unproductive productions */
     eraser.erase(newProds);
+
     if (this->verbose) {
         dout << __func__ << ": done with hygiene..." << endl;
         dout << __func__ << ": here is the new cfg:" << endl;
@@ -411,27 +415,23 @@ CFG::clean(const CFGProductionMarker &marker,
 }
 
 /* ////////////////////////////////////////////////////////////////////////// */
-CFGProductions
-CFG::rmUnreachableVars(const CFGProductions &old)
-{
-    CFGProductions newProds;
-
-    return newProds;
-}
-
-/* ////////////////////////////////////////////////////////////////////////// */
 void
 CFG::clean(void)
 {
     /* the order of this matters. first we find and remove non-generating
      * productions and their rules and then we do the same for non-reachable
      * variables. */
-    GeneratingMarker gMarker;
-    NonGeneratingEraser ngEraser;
-    NonGeneratingHygiene ngHygiene;
+    GeneratingMarker     gMarker;
+    NonGeneratingEraser  gEraser;
+    NonGeneratingHygiene gHygiene;
 
     ReachabilityMarker rMarker;
-    this->cleanProductions = this->clean(gMarker, ngEraser,
-                                         ngHygiene, this->productions);
-    this->cleanProductions = this->rmUnreachableVars(this->cleanProductions);
+    UnreachableEraser  rEraser;
+    UnreachableHygiene rHygiene;
+
+    this->cleanProductions = this->clean(gMarker, gEraser,
+                                         gHygiene, this->productions);
+
+    this->cleanProductions = this->clean(rMarker, rEraser,
+                                         rHygiene, this->cleanProductions);
 }

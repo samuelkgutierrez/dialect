@@ -208,8 +208,6 @@ public:
                          const CFGProductionEraser &eraser,
                          const CFGProductionHygieneAlgo &algo,
                          const CFGProductions &old) const;
-    /* removes unreachable variables from the instance */
-    CFGProductions rmUnreachableVars(const CFGProductions &old);
     /* performs grammar hygiene operations on the calling instance */
     static void markAllSymbols(CFGProductions &productions,
                                const Symbol &symbol);
