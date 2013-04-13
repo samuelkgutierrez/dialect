@@ -523,7 +523,30 @@ void
 CFG::computeNullable(void)
 {
     CFGProductions pCopy = this->cleanProductions;
-
     NullableMarker marker; marker.beVerbose(this->verbose);
+
+    /* init symbol markers for nullable calculation */
     marker.mark(pCopy);
+
+    bool hadUpdate;
+    do {
+        hadUpdate = false;
+        if (this->verbose) {
+            dout << __func__ << ": in main loop" << endl;
+        }
+        for (CFGProductions::iterator p = pCopy.begin();
+             pCopy.end() != p;
+             ++p) {
+            if (p->rhsMarked() && !p->lhs().marked()) {
+                if (this->verbose) {
+                    dout << "  marking " << p->lhs() << endl;
+                }
+                CFG::markAllSymbols(pCopy, p->lhs().sym());
+                hadUpdate = true;
+            }
+        }
+        if (!hadUpdate) {
+            if (this->verbose) dout << "  done!" << endl;
+        }
+    } while (hadUpdate);
 }
