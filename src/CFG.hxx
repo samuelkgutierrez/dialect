@@ -202,7 +202,7 @@ public:
     CFGProductions
     buildFullyPopulatedGrammar(const CFGProductions &prods) const;
 
-    template <typename T> void emitAllMembers(const T &t) const;
+    template <typename T> static void emitAllMembers(const T &t);
     /* cleans old based on marker, eraser, and algo behavior */
     CFGProductions clean(const CFGProductionMarker &marker,
                          const CFGProductionEraser &eraser,

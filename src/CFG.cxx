@@ -174,13 +174,53 @@ void
 UnreachableEraser::erase(CFGProductions &productions) const
 {
     /* XXX */
-    ;
+    if (true) {
+        dout << __func__ << ": removing unreachable symbols..." << endl;
+    }
+    for (CFGProductions::iterator p = productions.begin();
+         productions.end() != p;) {
+        if (!p->lhs().marked()) {
+            dout << "  rm " << *p << endl;
+            p = productions.erase(p);
+        }
+        else ++p;
+    }
 }
 
 /* ////////////////////////////////////////////////////////////////////////// */
 void
 UnreachableHygiene::go(CFGProductions &productions) const
 {
+    bool hadUpdate;
+    do {
+        hadUpdate = false;
+        /* XXX */
+        if (true) {
+            dout << __func__ << ": in main loop" << endl;
+        }
+        for (CFGProductions::iterator p = productions.begin();
+             productions.end() != p;
+             ++p) {
+            if (p->lhs().marked() && !p->rhsMarked()) {
+                /* XXX */
+                if (true) {
+                    dout << "  marking " << endl;
+                    CFG::emitAllMembers(p->rhs());
+                }
+                vector<Symbol> &rhs = p->rhs();
+                for (vector<Symbol>::iterator sym = rhs.begin();
+                     rhs.end() != sym;
+                     ++sym) {
+                    CFG::markAllSymbols(productions, sym->sym());
+                }
+                hadUpdate = true;
+            }
+        }
+        if (!hadUpdate) {
+            /* XXX */
+            if (true) dout << "  done!" << endl;
+        }
+    } while (hadUpdate);
 }
 
 /* ////////////////////////////////////////////////////////////////////////// */
@@ -292,7 +332,7 @@ CFG::buildFullyPopulatedGrammar(const CFGProductions &productions) const
 /* ////////////////////////////////////////////////////////////////////////// */
 template <typename T>
 void
-CFG::emitAllMembers(const T &t) const
+CFG::emitAllMembers(const T &t)
 {
     typename T::const_iterator member;
 
@@ -309,15 +349,15 @@ CFG::emitState(void) const
     dout << "start symbol: " << this->startSymbol.sym() << endl;
 
     dout << "non-terminals begin" << endl;
-    this->emitAllMembers(this->nonTerminals);
+    CFG::emitAllMembers(this->nonTerminals);
     dout << "non-terminals end" << endl;
 
     dout << "terminals begin" << endl;
-    this->emitAllMembers(this->terminals);
+    CFG::emitAllMembers(this->terminals);
     dout << "terminals end" << endl;
 
     dout << "productions begin" << endl;
-    this->emitAllMembers(this->productions);
+    CFG::emitAllMembers(this->productions);
     dout << "productions end" << endl;
 
     dout << endl;
@@ -398,6 +438,7 @@ CFG::clean(const CFGProductionMarker &marker,
            const CFGProductions &old) const
 {
     CFGProductions newProds = old;
+    dout << __func__ << ": grammar hygiene begin ***" << endl;
     /* start by marking all symbols */
     marker.mark(newProds);
     /* run the hygiene algo */
@@ -406,9 +447,9 @@ CFG::clean(const CFGProductionMarker &marker,
     eraser.erase(newProds);
 
     if (this->verbose) {
-        dout << __func__ << ": done with hygiene..." << endl;
         dout << __func__ << ": here is the new cfg:" << endl;
-        this->emitAllMembers(newProds);
+        CFG::emitAllMembers(newProds);
+        dout << __func__ << ": grammar hygiene end ***" << endl;
         dout << endl;
     }
     return newProds;
