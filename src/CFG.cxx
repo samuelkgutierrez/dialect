@@ -543,6 +543,8 @@ CFG::computeNullable(void)
                 }
                 CFG::markAllSymbols(pCopy, p->lhs().sym());
                 hadUpdate = true;
+                /* add this symbol to the nullable set */
+                this->nullableSet.insert(p->lhs().sym());
             }
         }
         if (!hadUpdate) {
