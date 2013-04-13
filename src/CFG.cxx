@@ -438,6 +438,7 @@ CFG::clean(const CFGProductionMarker &marker,
            const CFGProductions &old) const
 {
     CFGProductions newProds = old;
+
     dout << __func__ << ": grammar hygiene begin ***" << endl;
     /* start by marking all symbols */
     marker.mark(newProds);

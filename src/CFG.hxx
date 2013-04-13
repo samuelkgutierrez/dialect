@@ -201,7 +201,7 @@ public:
 
     CFGProductions
     buildFullyPopulatedGrammar(const CFGProductions &prods) const;
-
+    /* XXX move this to Base */
     template <typename T> static void emitAllMembers(const T &t);
     /* cleans old based on marker, eraser, and algo behavior */
     CFGProductions clean(const CFGProductionMarker &marker,
@@ -211,6 +211,7 @@ public:
     /* performs grammar hygiene operations on the calling instance */
     static void markAllSymbols(CFGProductions &productions,
                                const Symbol &symbol);
+
     void clean(void);
 };
 
