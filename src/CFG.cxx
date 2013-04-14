@@ -438,6 +438,23 @@ CFG::markAllSymbols(CFGProductions &productions,
 }
 
 /* ////////////////////////////////////////////////////////////////////////// */
+static void
+markAllRHS(CFGProductions &productions,
+           const Symbol &symbol)
+{
+    for (CFGProductions::iterator p = productions.begin();
+         productions.end() != p;
+         ++p) {
+        vector<Symbol> &rhs = p->rhs();
+        for (vector<Symbol>::iterator sym = rhs.begin();
+             rhs.end() != sym;
+             ++sym) {
+            if (symbol == *sym) sym->mark(true);
+        }
+    }
+}
+
+/* ////////////////////////////////////////////////////////////////////////// */
 void
 CFG::propagateFirsts(CFGProductions &productions,
                      const Symbol &symbol,
@@ -605,7 +622,7 @@ CFG::initFirstSets(void)
             if (sym->isTerminal()) {
                 /* mark all terminals */
                 sym->mark(true);
-                /* add myself to my firsts if not epsilon 8-| */
+                /* XXX add myself to my firsts if not epsilon 8-| */
                 sym->firsts().insert(*sym);
             }
             else sym->mark(false);
@@ -635,6 +652,10 @@ CFG::computeFirstSets(void)
              ++p) {
             if (!p->lhs().marked()) {
                 Symbol alpha = *p->rhs().begin();
+                if (0 == alpha.firsts().size()) {
+                    hadUpdate = true;
+                    continue;
+                }
                 /* if alpha is nullable */
                 if (this->nullableSet.end() != this->nullableSet.find(alpha)) {
                     /* need FIRST(alpha) U FIRST(beta) */
@@ -658,12 +679,9 @@ CFG::computeFirstSets(void)
                 CFG::propagateFirsts(this->cleanProductions,
                                      p->lhs().sym(),
                                      p->lhs().firsts());
-                //CFG::markAllSymbols(this->cleanProductions, p->lhs().sym());
+                markAllRHS(this->cleanProductions, p->lhs().sym());
                 p->lhs().mark(true);
                 hadUpdate = true;
-                dout << "XXXXXXXXXXXXXXXXXXXXXXX" << endl;
-                CFG::emitAllMembers(p->lhs().firsts());
-                dout << "XXXXXXXXXXXXXXXXXXXXXXX" << endl;
             }
         }
         if (!hadUpdate) {
@@ -681,7 +699,7 @@ CFG::computeFirstSets(void)
             dout << const_cast<CFGProduction &>(*p).lhs().sym()
                  << " end" << endl;
         }
-        dout << __func__ << ": fixed-point begin ***" << endl;
+        dout << __func__ << ": fixed-point end ***" << endl;
         dout << endl;
     }
 }
