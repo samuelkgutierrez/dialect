@@ -622,7 +622,7 @@ CFG::initFirstSets(void)
             if (sym->isTerminal()) {
                 /* mark all terminals */
                 sym->mark(true);
-                /* XXX add myself to my firsts if not epsilon 8-| */
+                /* add myself to my firsts if not epsilon 8-| */
                 if (!sym->isEpsilon()) sym->firsts().insert(*sym);
             }
             else sym->mark(false);
@@ -691,13 +691,20 @@ CFG::computeFirstSets(void)
 
     if (this->verbose) {
         dout << __func__ << ": here are the first sets:" << endl;
+        set<Symbol> lhsSet;
         for (CFGProductions::const_iterator p = this->cleanProductions.begin();
              this->cleanProductions.end() != p;
              ++p) {
-            dout << const_cast<CFGProduction &>(*p).lhs().sym() << " begin" << endl;
-            CFG::emitAllMembers(const_cast<CFGProduction &>(*p).lhs().firsts());
-            dout << const_cast<CFGProduction &>(*p).lhs().sym()
-                 << " end" << endl;
+            lhsSet.insert(const_cast<CFGProduction &>(*p).lhs());
+            vector<Symbol> rhs = const_cast<CFGProduction &>(*p).rhs();
+            lhsSet.insert(rhs.begin(), rhs.end());
+        }
+        for (set<Symbol>::const_iterator s = lhsSet.begin();
+             lhsSet.end() != s;
+             ++s) {
+            dout << *s << " begin" << endl;
+            CFG::emitAllMembers(const_cast<Symbol &>(*s).firsts());
+            dout << *s << " end" << endl;
         }
         dout << __func__ << ": fixed-point end ***" << endl;
         dout << endl;
