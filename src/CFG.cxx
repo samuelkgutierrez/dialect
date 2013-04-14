@@ -75,7 +75,7 @@ operator<<(ostream &out,
     out << production.leftHandSide << " --> ";
     vector<Symbol>::const_iterator p;
     for (p = production.rhs().begin(); production.rhs().end() != p; ++p) {
-        cout << *p;
+        out << *p;
     }
     return out;
 }
