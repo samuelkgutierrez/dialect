@@ -114,12 +114,8 @@ public:
 
     Symbol &lhs(void) { return this->leftHandSide; }
 
-    //Symbol lhs(void) const { return this->leftHandSide; }
-
     std::vector<Symbol> &rhs(void) { return this->rightHandSide; }
 
-    //std::vector<Symbol> rhs(void) const { return this->rightHandSide; }
-    
     bool rhsMarked(void) const;
 
     friend std::ostream &operator<<(std::ostream &out,
