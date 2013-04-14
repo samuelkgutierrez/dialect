@@ -73,8 +73,8 @@ operator<<(ostream &out,
            const CFGProduction &production)
 {
     out << production.leftHandSide << " --> ";
-    vector<Symbol>::const_iterator p;
-    for (p = production.rhs().begin(); production.rhs().end() != p; ++p) {
+    vector<Symbol>::const_iterator p = production.rightHandSide.begin();
+    for (; production.rightHandSide.end() != p; ++p) {
         out << *p;
     }
     return out;
@@ -97,8 +97,8 @@ CFGProduction::CFGProduction(const string &lhs,
 bool
 CFGProduction::rhsMarked(void) const
 {
-    for (vector<Symbol>::const_iterator sym = this->rhs().begin();
-         this->rhs().end() != sym;
+    for (vector<Symbol>::const_iterator sym = this->rightHandSide.begin();
+         this->rightHandSide.end() != sym;
          ++sym) {
         if (!sym->marked()) return false;
     }
@@ -362,7 +362,7 @@ void
 CFG::emitState(void) const
 {
     dout << endl;
-    dout << "start symbol: " << this->startSymbol.sym() << endl;
+    dout << "start symbol: " << this->startSymbol << endl;
 
     dout << "non-terminals begin" << endl;
     CFG::emitAllMembers(this->nonTerminals);
@@ -391,7 +391,7 @@ CFG::getNonTerminals(void) const
     for (CFGProductions::const_iterator p = this->productions.begin();
          this->productions.end() != p;
          ++p) {
-        nonTerms.insert(p->lhs());
+        nonTerms.insert(const_cast<CFGProduction &>(*p).lhs());
     }
     return nonTerms;
 }
@@ -407,7 +407,7 @@ CFG::getTerminals(void) const
     for (production = this->productions.begin();
          this->productions.end() != production;
          ++production) {
-        vector<Symbol> rhs = production->rhs();
+        vector<Symbol> rhs = const_cast<CFGProduction &>(*production).rhs();
         for (vector<Symbol>::const_iterator sym = rhs.begin();
              rhs.end() != sym;
              ++sym) {
@@ -615,6 +615,7 @@ CFG::initFirstSets(void)
 void
 CFG::computeFirstSets(void)
 {
+#if 0
     bool hadUpdate;
 
     if (this->verbose) {
@@ -682,4 +683,5 @@ CFG::computeFirstSets(void)
         dout << __func__ << ": fixed-point begin ***" << endl;
         dout << endl;
     }
+#endif
 }
