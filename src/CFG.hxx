@@ -46,7 +46,12 @@ private:
     std::set<Symbol> firstSet;
 
 public:
+    /* epsilon */
     static const std::string EPSILON;
+    /* real start symbol */
+    static const std::string START;
+    /* special terminal symbol */
+    static const std::string END;
     /* all "valid" symbols will be exactly one character in length */
     Symbol(void) : marker(false),
                    symbol("_0xDEADBEEF_"),
@@ -219,12 +224,16 @@ private:
     void initFirstSets(void);
     /* compute first sets */
     void computeFirstSets(void);
+    /* compute follow sets */
+    void computeFollowSets(void);
     /* performs prep work for parse table creation */
     void parseTablePrep(void);
 
     static void propagateFirsts(CFGProductions &productions,
                                 const Symbol &symbol,
                                 const std::set<Symbol> &firstSet);
+
+    void followSetPrep(void);
 
 public:
     CFG(void);

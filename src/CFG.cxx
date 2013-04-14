@@ -36,6 +36,8 @@ using namespace std;
  * either side of any production rule. if this ever changes, then this "special"
  * character will need to be changed. */
 const string Symbol::EPSILON = " ";
+const string Symbol::START = "S'";
+const string Symbol::END = "$";
 
 /* ////////////////////////////////////////////////////////////////////////// */
 bool
@@ -282,9 +284,16 @@ CFG::buildFullyPopulatedGrammar(const CFGProductions &productions) const
     CFGProductions fpp = productions;
     /* set of non-terminals */
     set<Symbol> nonTerminals;
+
     /* stash the start symbol */
     CFGProduction firstProduction = *productions.begin();
     Symbol startSymbol = firstProduction.lhs();
+
+    /* add a new, special terminal, $ and new start production */
+    fpp.insert(fpp.begin(), CFGProduction(Symbol::START,
+                                          startSymbol.sym() + Symbol::END));
+
+    startSymbol = Symbol(Symbol::START);
 
     /* first mark all non-terminals on the lhs and add to nonTerminals */
     for (CFGProduction &prod : fpp) {
@@ -500,6 +509,7 @@ CFG::parseTablePrep(void)
     /* the order of this matters. */
     this->computeNullable();
     this->computeFirstSets();
+    this->computeFollowSets();
 }
 
 /* ////////////////////////////////////////////////////////////////////////// */
@@ -623,6 +633,24 @@ CFG::computeFirstSets(void)
             dout << sym << " end" << endl;
         }
         dout << __func__ << ": fixed-point end ***" << endl;
+        dout << endl;
+    }
+}
+
+/* ////////////////////////////////////////////////////////////////////////// */
+void
+CFG::followSetPrep(void)
+{
+}
+
+/* ////////////////////////////////////////////////////////////////////////// */
+void
+CFG::computeFollowSets(void)
+{
+    if (this->verbose) dout << __func__ << ": begin ***" << endl;
+
+    if (this->verbose) {
+        dout << __func__ << ": end ***" << endl;
         dout << endl;
     }
 }
