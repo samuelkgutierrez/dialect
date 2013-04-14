@@ -34,7 +34,7 @@ AM_CONFIG_HEADER([config.h])
 # checks for programs.
 AC_USE_SYSTEM_EXTENSIONS
 AC_LANG([C++])
-AC_PROG_CXX
+AC_PROG_CXX([clang++ g++])
 
 dnl check for C++11 support
 AX_CXX_COMPILE_STDCXX_11([noext])
