@@ -143,17 +143,12 @@ void
 NullableMarker::mark(CFGProductions &productions) const
 {
     /* start by marking all epsilons */
-    for (CFGProductions::iterator p = productions.begin();
-         productions.end() != p;
-         ++p) {
+    for (CFGProduction &p : productions) {
         /* the lhs can't be a terminal, so it can't be epsilon */
-        p->lhs().mark(false);
-        vector<Symbol> &rhs = p->rhs();
-        for (vector<Symbol>::iterator sym = rhs.begin();
-             rhs.end() != sym;
-             ++sym) {
-            if (sym->isEpsilon()) sym->mark(true);
-            else sym->mark(false);
+        p.lhs().mark(false);
+        for (Symbol &sym : p.rhs()) {
+            if (sym.isEpsilon()) sym.mark(true);
+            else sym.mark(false);
         }
     }
 }
@@ -165,8 +160,7 @@ NonGeneratingEraser::erase(CFGProductions &productions) const
     if (this->verbose) {
         dout << __func__ << ": removing non-generating symbols..." << endl;
     }
-    for (CFGProductions::iterator p = productions.begin();
-         productions.end() != p;) {
+    for (auto p = productions.begin(); productions.end() != p;) {
         if (!p->lhs().marked() || !p->rhsMarked()) {
             if (this->verbose) {
                 dout << "  rm " << *p << endl;
@@ -184,8 +178,7 @@ UnreachableEraser::erase(CFGProductions &productions) const
     if (this->verbose) {
         dout << __func__ << ": removing unreachable symbols..." << endl;
     }
-    for (CFGProductions::iterator p = productions.begin();
-         productions.end() != p;) {
+    for (auto p = productions.begin(); productions.end() != p;) {
         if (!p->lhs().marked()) {
             if (this->verbose) {
                 dout << "  rm " << *p << endl;
@@ -206,19 +199,14 @@ UnreachableHygiene::go(CFGProductions &productions) const
         if (this->verbose) {
             dout << __func__ << ": in main loop" << endl;
         }
-        for (CFGProductions::iterator p = productions.begin();
-             productions.end() != p;
-             ++p) {
-            if (p->lhs().marked() && !p->rhsMarked()) {
+        for (CFGProduction &p : productions) {
+            if (p.lhs().marked() && !p.rhsMarked()) {
                 if (this->verbose) {
                     dout << "  marking " << endl;
-                    CFG::emitAllMembers(p->rhs());
+                    CFG::emitAllMembers(p.rhs());
                 }
-                vector<Symbol> &rhs = p->rhs();
-                for (vector<Symbol>::iterator sym = rhs.begin();
-                     rhs.end() != sym;
-                     ++sym) {
-                    CFG::markAllSymbols(productions, sym->sym());
+                for (Symbol &sym : p.rhs()) {
+                    CFG::markAllSymbols(productions, sym.sym());
                 }
                 hadUpdate = true;
             }
@@ -239,15 +227,13 @@ NonGeneratingHygiene::go(CFGProductions &productions) const
         if (this->verbose) {
             dout << __func__ << ": in main loop" << endl;
         }
-        for (CFGProductions::iterator p = productions.begin();
-             productions.end() != p;
-             ++p) {
-            if (!p->lhs().marked() && p->rhsMarked()) {
+        for (CFGProduction &p : productions) {
+            if (!p.lhs().marked() && p.rhsMarked()) {
                 if (this->verbose) {
-                    dout << "  marking " << p->lhs() << endl;
+                    dout << "  marking " << p.lhs() << endl;
                 }
                 /* make sure that we update all instances of lhs()->sym() */
-                CFG::markAllSymbols(productions, p->lhs().sym());
+                CFG::markAllSymbols(productions, p.lhs().sym());
                 hadUpdate = true;
             }
         }
