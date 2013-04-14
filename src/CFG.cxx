@@ -122,8 +122,7 @@ GeneratingMarker::mark(CFGProductions &productions) const
     for (CFGProduction &p : productions) {
         p.lhs().mark(false);
         for (Symbol &sym : p.rhs()) {
-            if (sym.isTerminal()) sym.mark(true);
-            else sym.mark(false);
+            sym.mark(sym.isTerminal());
         }
     }
 }
@@ -137,8 +136,7 @@ ReachabilityMarker::mark(CFGProductions &productions) const
         if (p.lhs().isStart()) p.lhs().mark(true);
         else p.lhs().mark(false);
         for (Symbol &sym : p.rhs()) {
-            if (sym.isStart()) sym.mark(true);
-            else sym.mark(false);
+            sym.mark(sym.isStart());
         }
     }
 }
