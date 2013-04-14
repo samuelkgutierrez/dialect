@@ -287,32 +287,25 @@ CFG::buildFullyPopulatedGrammar(const CFGProductions &productions) const
     Symbol startSymbol = firstProduction.lhs();
 
     /* first mark all non-terminals on the lhs and add to nonTerminals */
-    for (CFGProductions::iterator prod = fpp.begin();
-         fpp.end() != prod;
-         ++prod) {
-        prod->lhs().setIsTerminal(false);
-        nonTerminals.insert(prod->lhs());
-        if (startSymbol == prod->lhs()) prod->lhs().setIsStart(true);
+    for (CFGProduction &prod : fpp) {
+        prod.lhs().setIsTerminal(false);
+        nonTerminals.insert(prod.lhs());
+        if (startSymbol == prod.lhs()) prod.lhs().setIsStart(true);
     }
     /* now that we know about all the non-terminals, finish setup by updating
      * the symbols on the right-hand side. */
-    for (CFGProductions::iterator prod = fpp.begin();
-         fpp.end() != prod;
-         ++prod) {
-        vector<Symbol> &rhs = prod->rhs();
+    for (CFGProduction &prod : fpp) {
         /* iterate over all the symbols on the rhs */
-        for (vector<Symbol>::iterator sym = rhs.begin();
-             rhs.end() != sym;
-             ++sym) {
+        for (Symbol &sym : prod.rhs()) {
             /* not in set of non-terminals, so must be a terminal */
-            if (nonTerminals.end() == nonTerminals.find(*sym)) {
-                sym->setIsTerminal(true);
+            if (nonTerminals.end() == nonTerminals.find(sym)) {
+                sym.setIsTerminal(true);
             }
             /* must be a non-terminal on the rhs */
             else {
-                sym->setIsTerminal(false);
+                sym.setIsTerminal(false);
             }
-            if (startSymbol == *sym) sym->setIsStart(true);
+            if (startSymbol == sym) sym.setIsStart(true);
         }
     }
     return fpp;
@@ -361,10 +354,8 @@ CFG::getNonTerminals(void) const
 {
     set<Symbol> nonTerms;
 
-    for (CFGProductions::const_iterator p = this->productions.begin();
-         this->productions.end() != p;
-         ++p) {
-        nonTerms.insert(const_cast<CFGProduction &>(*p).lhs());
+    for (const CFGProduction &p : this->productions) {
+        nonTerms.insert(const_cast<CFGProduction &>(p).lhs());
     }
     return nonTerms;
 }
@@ -373,20 +364,11 @@ CFG::getNonTerminals(void) const
 set<Symbol>
 CFG::getTerminals(void) const
 {
-    CFGProductions::const_iterator production;
-    /* the result */
     set<Symbol> terms;
 
-    for (production = this->productions.begin();
-         this->productions.end() != production;
-         ++production) {
-        vector<Symbol> rhs = const_cast<CFGProduction &>(*production).rhs();
-        for (vector<Symbol>::const_iterator sym = rhs.begin();
-             rhs.end() != sym;
-             ++sym) {
-            if (sym->isTerminal()) {
-                terms.insert(*sym);
-            }
+    for (const CFGProduction &production : this->productions) {
+        for (const Symbol &s : const_cast<CFGProduction &>(production).rhs()) {
+            if (s.isTerminal()) terms.insert(s);
         }
     }
     return terms;
@@ -397,15 +379,10 @@ void
 CFG::markAllSymbols(CFGProductions &productions,
                     const Symbol &symbol)
 {
-    for (CFGProductions::iterator p = productions.begin();
-         productions.end() != p;
-         ++p) {
-        if (symbol == p->lhs()) p->lhs().mark(true);
-        vector<Symbol> &rhs = p->rhs();
-        for (vector<Symbol>::iterator sym = rhs.begin();
-             rhs.end() != sym;
-             ++sym) {
-            if (symbol == *sym) sym->mark(true);
+    for (CFGProduction &p : productions) {
+        if (symbol == p.lhs()) p.lhs().mark(true);
+        for (Symbol &sym : p.rhs()) {
+            if (symbol == sym) sym.mark(true);
         }
     }
 }
@@ -415,14 +392,9 @@ static void
 markAllRHS(CFGProductions &productions,
            const Symbol &symbol)
 {
-    for (CFGProductions::iterator p = productions.begin();
-         productions.end() != p;
-         ++p) {
-        vector<Symbol> &rhs = p->rhs();
-        for (vector<Symbol>::iterator sym = rhs.begin();
-             rhs.end() != sym;
-             ++sym) {
-            if (symbol == *sym) sym->mark(true);
+    for (CFGProduction &p : productions) {
+        for (Symbol &sym : p.rhs()) {
+            if (symbol == sym) sym.mark(true);
         }
     }
 }
@@ -433,18 +405,13 @@ CFG::propagateFirsts(CFGProductions &productions,
                      const Symbol &symbol,
                      const set<Symbol> &firstSet)
 {
-    for (CFGProductions::iterator p = productions.begin();
-         productions.end() != p;
-         ++p) {
-        if (symbol == p->lhs()) {
-            p->lhs().firsts().insert(firstSet.begin(), firstSet.end());
+    for (CFGProduction &p : productions) {
+        if (symbol == p.lhs()) {
+            p.lhs().firsts().insert(firstSet.begin(), firstSet.end());
         }
-        vector<Symbol> &rhs = p->rhs();
-        for (vector<Symbol>::iterator sym = rhs.begin();
-             rhs.end() != sym;
-             ++sym) {
-            if (symbol == *sym) {
-                sym->firsts().insert(firstSet.begin(), firstSet.end());
+        for (Symbol &sym : p.rhs()) {
+            if (symbol == sym) {
+                sym.firsts().insert(firstSet.begin(), firstSet.end());
             }
         }
     }
@@ -554,17 +521,15 @@ CFG::computeNullable(void)
         if (this->verbose) {
             dout << __func__ << ": in main loop" << endl;
         }
-        for (CFGProductions::iterator p = pCopy.begin();
-             pCopy.end() != p;
-             ++p) {
-            if (p->rhsMarked() && !p->lhs().marked()) {
+        for (CFGProduction &p : pCopy) {
+            if (p.rhsMarked() && !p.lhs().marked()) {
                 if (this->verbose) {
-                    dout << "  marking " << p->lhs() << endl;
+                    dout << "  marking " << p.lhs() << endl;
                 }
-                CFG::markAllSymbols(pCopy, p->lhs().sym());
+                CFG::markAllSymbols(pCopy, p.lhs().sym());
                 hadUpdate = true;
                 /* add this symbol to the nullable set */
-                this->nullableSet.insert(p->lhs().sym());
+                this->nullableSet.insert(p.lhs().sym());
             }
         }
         if (!hadUpdate) {
