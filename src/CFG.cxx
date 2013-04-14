@@ -96,10 +96,8 @@ CFGProduction::CFGProduction(const string &lhs,
 bool
 CFGProduction::rhsMarked(void) const
 {
-    for (vector<Symbol>::const_iterator sym = this->rightHandSide.begin();
-         this->rightHandSide.end() != sym;
-         ++sym) {
-        if (!sym->marked()) return false;
+    for (const Symbol &sym : this->rightHandSide) {
+        if (!sym.marked()) return false;
     }
     return true;
 }
@@ -116,17 +114,11 @@ GeneratingMarker::mark(CFGProductions &productions) const
 {
     /* init the symbol markers by marking all terminals and making sure that
      * non-terminals aren't marked at this point. */
-
-    for (CFGProductions::iterator p = productions.begin();
-         productions.end() != p;
-         ++p) {
-        p->lhs().mark(false);
-        vector<Symbol> &rhs = p->rhs();
-        for (vector<Symbol>::iterator sym = rhs.begin();
-             rhs.end() != sym;
-             ++sym) {
-            if (sym->isTerminal()) sym->mark(true);
-            else sym->mark(false);
+    for (CFGProduction &p : productions) {
+        p.lhs().mark(false);
+        for (Symbol &sym : p.rhs()) {
+            if (sym.isTerminal()) sym.mark(true);
+            else sym.mark(false);
         }
     }
 }
@@ -136,17 +128,12 @@ void
 ReachabilityMarker::mark(CFGProductions &productions) const
 {
     /* this one is easy. mark the start symbol. */
-    for (CFGProductions::iterator p = productions.begin();
-         productions.end() != p;
-         ++p) {
-        if (p->lhs().isStart()) p->lhs().mark(true);
-        else p->lhs().mark(false);
-        vector<Symbol> &rhs = p->rhs();
-        for (vector<Symbol>::iterator sym = rhs.begin();
-             rhs.end() != sym;
-             ++sym) {
-            if (sym->isStart()) sym->mark(true);
-            else sym->mark(false);
+    for (CFGProduction &p : productions) {
+        if (p.lhs().isStart()) p.lhs().mark(true);
+        else p.lhs().mark(false);
+        for (Symbol &sym : p.rhs()) {
+            if (sym.isStart()) sym.mark(true);
+            else sym.mark(false);
         }
     }
 }
