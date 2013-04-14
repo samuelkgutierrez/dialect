@@ -623,7 +623,7 @@ CFG::initFirstSets(void)
                 /* mark all terminals */
                 sym->mark(true);
                 /* XXX add myself to my firsts if not epsilon 8-| */
-                sym->firsts().insert(*sym);
+                if (!sym->isEpsilon()) sym->firsts().insert(*sym);
             }
             else sym->mark(false);
         }
@@ -652,7 +652,7 @@ CFG::computeFirstSets(void)
              ++p) {
             if (!p->lhs().marked()) {
                 Symbol alpha = *p->rhs().begin();
-                if (0 == alpha.firsts().size()) {
+                if (0 == alpha.firsts().size() && !alpha.isTerminal()) {
                     hadUpdate = true;
                     continue;
                 }
@@ -676,11 +676,11 @@ CFG::computeFirstSets(void)
                 if (this->verbose) {
                     dout << "  marking " << p->lhs() << endl;
                 }
+                p->lhs().mark(true);
                 CFG::propagateFirsts(this->cleanProductions,
                                      p->lhs().sym(),
                                      p->lhs().firsts());
                 markAllRHS(this->cleanProductions, p->lhs().sym());
-                p->lhs().mark(true);
                 hadUpdate = true;
             }
         }
