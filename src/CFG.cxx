@@ -73,9 +73,8 @@ operator<<(ostream &out,
            const CFGProduction &production)
 {
     out << production.leftHandSide << " --> ";
-    vector<Symbol>::const_iterator p = production.rightHandSide.begin();
-    for (; production.rightHandSide.end() != p; ++p) {
-        out << *p;
+    for (const Symbol &p : production.rightHandSide) {
+        out << p;
     }
     return out;
 }
@@ -612,21 +611,16 @@ CFG::computeNullable(void)
 void
 CFG::initFirstSets(void)
 {
-    for (CFGProductions::iterator p = this->cleanProductions.begin();
-         this->cleanProductions.end() != p;
-         ++p) {
-        p->lhs().mark(false);
-        vector<Symbol> &rhs = p->rhs();
-        for (vector<Symbol>::iterator sym = rhs.begin();
-             rhs.end() != sym;
-             ++sym) {
-            if (sym->isTerminal()) {
+    for (CFGProduction &p : this->cleanProductions) {
+        p.lhs().mark(false);
+        for (Symbol &sym : p.rhs()) {
+            if (sym.isTerminal()) {
                 /* mark all terminals */
-                sym->mark(true);
+                sym.mark(true);
                 /* add myself to my firsts if not epsilon 8-| */
-                if (!sym->isEpsilon()) sym->firsts().insert(*sym);
+                if (!sym.isEpsilon()) sym.firsts().insert(sym);
             }
-            else sym->mark(false);
+            else sym.mark(false);
         }
     }
 }
