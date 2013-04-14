@@ -532,9 +532,7 @@ CFG::computeNullable(void)
                 this->nullableSet.insert(p.lhs().sym());
             }
         }
-        if (!hadUpdate) {
-            if (this->verbose) dout << "  done!" << endl;
-        }
+        if (!hadUpdate) if (this->verbose) dout << "  done!" << endl;
     } while (hadUpdate);
 
     if (this->verbose) {
@@ -569,22 +567,17 @@ CFG::computeFirstSets(void)
 {
     bool hadUpdate;
 
-    if (this->verbose) {
-        dout << __func__ << ": fixed-point begin ***" << endl;
-    }
+    if (this->verbose) dout << __func__ << ": fixed-point begin ***" << endl;
 
     this->initFirstSets();
     /* start the fixed-point calculation */
     do {
         hadUpdate = false;
-        if (this->verbose) {
-            dout << __func__ << ": in main loop" << endl;
-        }
-        for (CFGProductions::iterator p = this->cleanProductions.begin();
-             this->cleanProductions.end() != p;
-             ++p) {
-            if (!p->lhs().marked()) {
-                Symbol alpha = *p->rhs().begin();
+        if (this->verbose) dout << __func__ << ": in main loop" << endl;
+
+        for (CFGProduction &p : this->cleanProductions) {
+            if (!p.lhs().marked()) {
+                Symbol alpha = *p.rhs().begin();
                 /* this must mean that the rhs hasn't been updated yet for this
                  * particular production. so, just continue. */
                 if (0 == alpha.firsts().size() && !alpha.isTerminal()) {
@@ -594,53 +587,40 @@ CFG::computeFirstSets(void)
                 /* if alpha is nullable */
                 if (this->nullableSet.end() != this->nullableSet.find(alpha)) {
                     /* need FIRST(alpha) U FIRST(beta) */
-                    vector<Symbol> rhs = p->rhs();
-                    /* we already have FIRST(alpha), so start at second symbol
-                     */
-                    for (vector<Symbol>::iterator sym = rhs.begin();
-                         rhs.end() != sym;
-                         ++sym) {
-                        p->lhs().firsts().insert(sym->firsts().begin(),
-                                                 sym->firsts().end());
+                    for (Symbol &sym : p.rhs()) {
+                        p.lhs().firsts().insert(sym.firsts().begin(),
+                                                sym.firsts().end());
                     }
                 }
                 /* else alpha is not nullable, so FIRST(alpha) is all we need */
                 else {
-                    p->lhs().firsts().insert(alpha.firsts().begin(),
-                                             alpha.firsts().end());
+                    p.lhs().firsts().insert(alpha.firsts().begin(),
+                                            alpha.firsts().end());
                 }
-                if (this->verbose) {
-                    dout << "  marking " << p->lhs() << endl;
-                }
-                p->lhs().mark(true);
+                if (this->verbose) dout << "  marking " << p.lhs() << endl;
+                p.lhs().mark(true);
                 CFG::propagateFirsts(this->cleanProductions,
-                                     p->lhs().sym(),
-                                     p->lhs().firsts());
-                markAllRHS(this->cleanProductions, p->lhs().sym());
+                                     p.lhs().sym(),
+                                     p.lhs().firsts());
+                markAllRHS(this->cleanProductions, p.lhs().sym());
                 hadUpdate = true;
             }
         }
-        if (!hadUpdate) {
-            if (this->verbose) dout << "  done!" << endl;
-        }
+        if (!hadUpdate) if (this->verbose) dout << "  done!" << endl;
     } while (hadUpdate);
 
     if (this->verbose) {
         dout << __func__ << ": here are the first sets:" << endl;
         set<Symbol> lhsSet;
-        for (CFGProductions::const_iterator p = this->cleanProductions.begin();
-             this->cleanProductions.end() != p;
-             ++p) {
-            lhsSet.insert(const_cast<CFGProduction &>(*p).lhs());
-            vector<Symbol> rhs = const_cast<CFGProduction &>(*p).rhs();
+        for (const CFGProduction &p : this->cleanProductions) {
+            lhsSet.insert(const_cast<CFGProduction &>(p).lhs());
+            vector<Symbol> rhs = const_cast<CFGProduction &>(p).rhs();
             lhsSet.insert(rhs.begin(), rhs.end());
         }
-        for (set<Symbol>::const_iterator s = lhsSet.begin();
-             lhsSet.end() != s;
-             ++s) {
-            dout << *s << " begin" << endl;
-            CFG::emitAllMembers(const_cast<Symbol &>(*s).firsts());
-            dout << *s << " end" << endl;
+        for (const Symbol &sym : lhsSet) {
+            dout << sym << " begin" << endl;
+            CFG::emitAllMembers(const_cast<Symbol &>(sym).firsts());
+            dout << sym << " end" << endl;
         }
         dout << __func__ << ": fixed-point end ***" << endl;
         dout << endl;
