@@ -117,6 +117,7 @@ GeneratingMarker::mark(CFGProductions &productions) const
 {
     /* init the symbol markers by marking all terminals and making sure that
      * non-terminals aren't marked at this point. */
+
     for (CFGProductions::iterator p = productions.begin();
          productions.end() != p;
          ++p) {
@@ -652,6 +653,8 @@ CFG::computeFirstSets(void)
              ++p) {
             if (!p->lhs().marked()) {
                 Symbol alpha = *p->rhs().begin();
+                /* this must mean that the rhs hasn't been updated yet for this
+                 * particular production. so, just continue. */
                 if (0 == alpha.firsts().size() && !alpha.isTerminal()) {
                     hadUpdate = true;
                     continue;
@@ -662,8 +665,9 @@ CFG::computeFirstSets(void)
                     vector<Symbol> rhs = p->rhs();
                     /* we already have FIRST(alpha), so start at second symbol
                      */
-                    vector<Symbol>::iterator sym = rhs.begin();
-                    for (; rhs.end() != sym; ++sym) {
+                    for (vector<Symbol>::iterator sym = rhs.begin();
+                         rhs.end() != sym;
+                         ++sym) {
                         p->lhs().firsts().insert(sym->firsts().begin(),
                                                  sym->firsts().end());
                     }

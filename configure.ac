@@ -17,12 +17,14 @@ AC_PREREQ([2.60])
 
 AC_INIT([dialect], [0.1])
 
+AC_CONFIG_SRCDIR([src])
+
+AC_CONFIG_MACRO_DIR([m4])
+
 # Check If AM_SILENT_RULES Rule Are Supported
 # If So, Build Using AM_SILENT_RULES
 m4_ifdef([AM_SILENT_RULES], [AM_SILENT_RULES([yes])])
 
-AC_CONFIG_SRCDIR([src])
-AC_CONFIG_MACRO_DIR([m4])
 
 # note: -Wall -Werror are automake options.  they are NOT compiler flags
 AM_INIT_AUTOMAKE([-Wall -Werror foreign])
@@ -30,10 +32,17 @@ AM_INIT_AUTOMAKE([-Wall -Werror foreign])
 AM_CONFIG_HEADER([config.h])
 
 # checks for programs.
+AC_USE_SYSTEM_EXTENSIONS
+AC_LANG([C++])
 AC_PROG_CXX
+
+dnl check for C++11 support
+AX_CXX_COMPILE_STDCXX_11([noext])
+AS_IF([test "x$HAVE_CXX11" != "x1"],
+      [AC_MSG_ERROR([** A compiler with C++11 language features is required.])])
+
 AC_PROG_LEX
 AC_PROG_YACC
-AC_GNU_SOURCE
 AC_PROG_LIBTOOL
 
 # checks for libraries.
