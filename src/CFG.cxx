@@ -32,11 +32,14 @@ using namespace std;
 /* ////////////////////////////////////////////////////////////////////////// */
 /* ////////////////////////////////////////////////////////////////////////// */
 
+const string Symbol::DEAD = "_0xDEADBEEF_";
 /* this is okay because our parser makes sure that we can never get a space on
  * either side of any production rule. if this ever changes, then this "special"
  * character will need to be changed. */
 const string Symbol::EPSILON = " ";
+/* our parser doesn't allow multi-char string, so this is okay */
 const string Symbol::START = "S'";
+/* our scanner doesn't accept $s, so this is okay */
 const string Symbol::END = "$";
 
 /* ////////////////////////////////////////////////////////////////////////// */
@@ -149,8 +152,21 @@ NullableMarker::mark(CFGProductions &productions) const
         /* the lhs can't be a terminal, so it can't be epsilon */
         p.lhs().mark(false);
         for (Symbol &sym : p.rhs()) {
-            if (sym.isEpsilon()) sym.mark(true);
-            else sym.mark(false);
+            sym.mark(sym.isEpsilon());
+        }
+    }
+}
+
+/* ////////////////////////////////////////////////////////////////////////// */
+void
+FollowSetMarker::mark(CFGProductions &productions) const
+{
+    /* start by marking all epsilons */
+    for (CFGProduction &p : productions) {
+        /* the lhs can't be a terminal, so it can't be epsilon */
+        p.lhs().mark(false);
+        for (Symbol &sym : p.rhs()) {
+            sym.mark(sym.isTerminal());
         }
     }
 }
@@ -647,7 +663,12 @@ CFG::followSetPrep(void)
 void
 CFG::computeFollowSets(void)
 {
+    FollowSetMarker marker;
+
     if (this->verbose) dout << __func__ << ": begin ***" << endl;
+
+    /* reset markers */
+    marker.mark(this->cleanProductions);
 
     if (this->verbose) {
         dout << __func__ << ": end ***" << endl;

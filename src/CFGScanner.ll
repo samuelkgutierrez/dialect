@@ -38,7 +38,7 @@ do {                                                                           \
 %}
 
 /* range of valid term ascii characters in octal */
-ASCII [\41-\176]
+ASCII [\45-\176]
 
 WS [ \t]
 

@@ -44,8 +44,12 @@ private:
     bool epsilon;
     /* first set for symbol */
     std::set<Symbol> firstSet;
+    /* follow set for symbol */
+    std::set<Symbol> followSet;
 
 public:
+    /* nothing */
+    static const std::string DEAD;
     /* epsilon */
     static const std::string EPSILON;
     /* real start symbol */
@@ -54,7 +58,7 @@ public:
     static const std::string END;
     /* all "valid" symbols will be exactly one character in length */
     Symbol(void) : marker(false),
-                   symbol("_0xDEADBEEF_"),
+                   symbol(Symbol::DEAD),
                    terminal(false),
                    start(false),
                    epsilon(false) { ; }
@@ -87,6 +91,8 @@ public:
     bool isEpsilon(void) const { return Symbol::EPSILON == this->symbol; }
 
     std::set<Symbol> &firsts(void) { return this->firstSet; }
+
+    std::set<Symbol> &follows(void) { return this->followSet; }
 
     /* == */
     friend bool operator==(const Symbol &s1,
@@ -155,6 +161,11 @@ public:
 };
 
 class NullableMarker : public CFGProductionMarker {
+public:
+    virtual void mark(CFGProductions &productions) const;
+};
+
+class FollowSetMarker : public CFGProductionMarker {
 public:
     virtual void mark(CFGProductions &productions) const;
 };
