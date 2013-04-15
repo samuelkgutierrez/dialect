@@ -697,14 +697,31 @@ CFG::computeFollowSets(void)
         vector<Symbol> updates;
         vector<Symbol>::iterator update;
         for (CFGProduction &p : this->cleanProductions) {
-            dout << __func__ << ": p " << p << endl;
             auto sym = p.rhs().begin();
             while (sym != p.rhs().end()) {
                 if (!sym->isTerminal()) {
                     Symbol rneighbor;
                     /* safe because we know that sym != rhs().end() */
                     advance(sym, 1);
-                    if (p.rhs().end() == sym) continue;
+                    if (p.rhs().end() == sym) {
+                        advance(sym, -1);
+                        sym->follows().insert(p.lhs().follows().begin(),
+                                              p.lhs().follows().end());
+                        /* XXX ugly, change later */
+                        if (updates.end() == (update = find(updates.begin(),
+                                                            updates.end(),
+                                                            *sym))) {
+                            updates.push_back(*sym);
+                        }
+                        /* sym is already in the updates vector, so just add to
+                         * the follow set. */
+                        else {
+                            update->follows().insert(sym->follows().begin(),
+                                                     sym->follows().end());
+                        }
+                        advance(sym, 1);
+                        continue;
+                    }
                     rneighbor = *sym;
                     advance(sym, -1);
                     size_t numelems = sym->follows().size();
@@ -738,7 +755,6 @@ CFG::computeFollowSets(void)
             if (this->verbose) dout << "  marking " << p.lhs() << endl;
             p.lhs().mark(true);
             CFG::propagateFollows(this->cleanProductions, updates);
-            dout << __func__ << ": p end " << p << endl;
         }
         if (!hadUpdate) if (this->verbose) dout << "  done!" << endl;
     } while (hadUpdate);
