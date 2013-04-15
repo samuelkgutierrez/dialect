@@ -307,6 +307,8 @@ CFG::buildFullyPopulatedGrammar(const CFGProductions &productions) const
     fpp.insert(fpp.begin(), CFGProduction(Symbol::START,
                                           startSymbol.sym() + Symbol::END));
 
+    fpp.begin()->lhs().follows().insert(Symbol(Symbol::END));
+
     startSymbol = Symbol(Symbol::START);
 
     /* first mark all non-terminals on the lhs and add to nonTerminals */
@@ -688,55 +690,55 @@ CFG::computeFollowSets(void)
     /* reset markers before we start calculating follow sets */
     marker.mark(this->cleanProductions);
 
+
     do {
         if (this->verbose) dout << __func__ << ": in main loop" << endl;
         hadUpdate = false;
         vector<Symbol> updates;
         vector<Symbol>::iterator update;
         for (CFGProduction &p : this->cleanProductions) {
-            if (!p.lhs().marked() || true) {
-                auto sym = p.rhs().begin();
-                while (sym != p.rhs().end()) {
-                    if (!sym->isTerminal()) {
-                        /* safe because we know that sym != rhs().end() */
-                        advance(sym, 1);
-                        if (p.rhs().end() == sym) {
-                            continue;
-                        }
-                        Symbol rneighbor = *sym;
-                        advance(sym, -1);
-                        size_t numelems = sym->follows().size();
-                        sym->follows().insert(rneighbor.firsts().begin(),
-                                              rneighbor.firsts().end());
+            dout << __func__ << ": p " << p << endl;
+            auto sym = p.rhs().begin();
+            while (sym != p.rhs().end()) {
+                if (!sym->isTerminal()) {
+                    Symbol rneighbor;
+                    /* safe because we know that sym != rhs().end() */
+                    advance(sym, 1);
+                    if (p.rhs().end() == sym) continue;
+                    rneighbor = *sym;
+                    advance(sym, -1);
+                    size_t numelems = sym->follows().size();
+                    sym->follows().insert(rneighbor.firsts().begin(),
+                                          rneighbor.firsts().end());
+                    if (sym->follows().size() != numelems) {
+                        hadUpdate = true;
+                    }
+                    if (this->nullable(rneighbor)) {
+                        numelems = sym->follows().size();
+                        sym->follows().insert(p.lhs().follows().begin(),
+                                              p.lhs().follows().end());
                         if (sym->follows().size() != numelems) {
                             hadUpdate = true;
                         }
-                        if (this->nullable(rneighbor)) {
-                            numelems = sym->follows().size();
-                            sym->follows().insert(p.lhs().follows().begin(),
-                                                  p.lhs().follows().end());
-                            if (sym->follows().size() != numelems) {
-                                hadUpdate = true;
-                            }
-                        }
-                        if (updates.end() == (update = find(updates.begin(),
-                                                            updates.end(),
-                                                            *sym))) {
-                            updates.push_back(*sym);
-                        }
-                        /* sym is already in the updates vector, so just add to
-                         * the follow set. */
-                        else {
-                            update->follows().insert(sym->follows().begin(),
-                                                     sym->follows().end());
-                        }
                     }
-                    ++sym;
+                    if (updates.end() == (update = find(updates.begin(),
+                                                        updates.end(),
+                                                        *sym))) {
+                        updates.push_back(*sym);
+                    }
+                    /* sym is already in the updates vector, so just add to
+                     * the follow set. */
+                    else {
+                        update->follows().insert(sym->follows().begin(),
+                                                 sym->follows().end());
+                    }
                 }
-                if (this->verbose) dout << "  marking " << p.lhs() << endl;
-                p.lhs().mark(true);
-                CFG::propagateFollows(this->cleanProductions, updates);
+                ++sym;
             }
+            if (this->verbose) dout << "  marking " << p.lhs() << endl;
+            p.lhs().mark(true);
+            CFG::propagateFollows(this->cleanProductions, updates);
+            dout << __func__ << ": p end " << p << endl;
         }
         if (!hadUpdate) if (this->verbose) dout << "  done!" << endl;
     } while (hadUpdate);
