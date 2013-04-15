@@ -694,7 +694,7 @@ CFG::computeFollowSets(void)
         vector<Symbol> updates;
         vector<Symbol>::iterator update;
         for (CFGProduction &p : this->cleanProductions) {
-            if (!p.lhs().marked()) {
+            if (!p.lhs().marked() || true) {
                 auto sym = p.rhs().begin();
                 while (sym != p.rhs().end()) {
                     if (!sym->isTerminal()) {
@@ -705,11 +705,19 @@ CFG::computeFollowSets(void)
                         }
                         Symbol rneighbor = *sym;
                         advance(sym, -1);
+                        size_t numelems = sym->follows().size();
                         sym->follows().insert(rneighbor.firsts().begin(),
                                               rneighbor.firsts().end());
+                        if (sym->follows().size() != numelems) {
+                            hadUpdate = true;
+                        }
                         if (this->nullable(rneighbor)) {
+                            numelems = sym->follows().size();
                             sym->follows().insert(p.lhs().follows().begin(),
                                                   p.lhs().follows().end());
+                            if (sym->follows().size() != numelems) {
+                                hadUpdate = true;
+                            }
                         }
                         if (updates.end() == (update = find(updates.begin(),
                                                             updates.end(),
@@ -722,14 +730,12 @@ CFG::computeFollowSets(void)
                             update->follows().insert(sym->follows().begin(),
                                                      sym->follows().end());
                         }
-                        sym->mark();
                     }
                     ++sym;
                 }
                 if (this->verbose) dout << "  marking " << p.lhs() << endl;
                 p.lhs().mark(true);
                 CFG::propagateFollows(this->cleanProductions, updates);
-                hadUpdate = true;
             }
         }
         if (!hadUpdate) if (this->verbose) dout << "  done!" << endl;
