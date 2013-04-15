@@ -159,9 +159,9 @@ NullableMarker::mark(CFGProductions &productions) const
 void
 FollowSetMarker::mark(CFGProductions &productions) const
 {
-    /* start by marking all epsilons */
+    /* this one is easy, just mark all terminals */
     for (CFGProduction &p : productions) {
-        /* the lhs can't be a terminal, so it can't be epsilon */
+        /* left-hand sides are always non-terminals */
         p.lhs().mark(false);
         for (Symbol &sym : p.rhs()) {
             sym.mark(sym.isTerminal());
@@ -441,6 +441,16 @@ CFG::propagateFirsts(CFGProductions &productions,
 }
 
 /* ////////////////////////////////////////////////////////////////////////// */
+void
+CFG::propagateFollows(CFGProductions &productions,
+                      const vector<Symbol> &what)
+{
+    for (CFGProduction &p : productions) {
+        vector<Symbol>::const_iterator sym;
+        if (what.end() != (sym = find(what.begin(), what.end(), p.lhs()))) {
+        }
+    }
+}
 
 /* ////////////////////////////////////////////////////////////////////////// */
 CFGProductions
@@ -661,12 +671,43 @@ CFG::followSetPrep(void)
 void
 CFG::computeFollowSets(void)
 {
+    bool hadUpdate;
     FollowSetMarker marker;
 
     if (this->verbose) dout << __func__ << ": begin ***" << endl;
 
-    /* reset markers */
+    /* reset markers before we start calculating follow sets */
     marker.mark(this->cleanProductions);
+
+    do {
+        if (this->verbose) dout << __func__ << ": in main loop" << endl;
+        hadUpdate = false;
+        vector<Symbol> updates;
+        for (CFGProduction &p : this->cleanProductions) {
+            if (!p.lhs().marked()) {
+                for (auto sym = p.rhs().begin(); p.rhs().end() != sym; ++sym) {
+                    if (!sym->isTerminal() && sym != p.rhs().end()) {
+                        /* safe because we know that sym != rhs().end() */
+                        Symbol rneighbor = *(sym + 1);
+                        sym->follows().insert(rneighbor.firsts().begin(),
+                                              rneighbor.firsts().end());
+                        if (this->nullable(*sym)) {
+                            sym->follows().insert(p.lhs().follows().begin(),
+                                                  p.lhs().follows().end());
+                        }
+                        updates.push_back(*sym);
+                    }
+                    sym->mark();
+                }
+                if (this->verbose) dout << "  marking " << p.lhs() << endl;
+                p.lhs().mark(true);
+                CFG::propagateFollows(this->cleanProductions, updates);
+                markAllRHS(this->cleanProductions, p.lhs().sym());
+                hadUpdate = true;
+            }
+        }
+        if (!hadUpdate) if (this->verbose) dout << "  done!" << endl;
+    } while (hadUpdate);
 
     if (this->verbose) {
         dout << __func__ << ": end ***" << endl;

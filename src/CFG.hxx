@@ -244,6 +244,9 @@ private:
                                 const Symbol &symbol,
                                 const std::set<Symbol> &firstSet);
 
+    void propagateFollows(CFGProductions &productions,
+                          const std::vector<Symbol> &what);
+
     void followSetPrep(void);
 
 public:
@@ -275,6 +278,9 @@ public:
     /* performs grammar hygiene operations on the calling instance */
     static void markAllSymbols(CFGProductions &productions,
                                const Symbol &symbol);
+
+    bool nullable(const Symbol &s) { return this->nullableSet.end() !=
+                                            this->nullableSet.find(s); }
 
     void clean(void);
 
