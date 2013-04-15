@@ -307,7 +307,8 @@ CFG::buildFullyPopulatedGrammar(const CFGProductions &productions) const
     fpp.insert(fpp.begin(), CFGProduction(Symbol::START,
                                           startSymbol.sym() + Symbol::END));
 
-    fpp.begin()->lhs().follows().insert(Symbol(Symbol::END));
+    /* XXX probably not needed. once things work, reconsider this code */
+    //fpp.begin()->lhs().follows().insert(Symbol(Symbol::END));
 
     startSymbol = Symbol(Symbol::START);
 
@@ -705,9 +706,14 @@ CFG::computeFollowSets(void)
                     advance(sym, 1);
                     if (p.rhs().end() == sym) {
                         advance(sym, -1);
+                        size_t asdf = sym->follows().size();
                         sym->follows().insert(p.lhs().follows().begin(),
                                               p.lhs().follows().end());
+                        if (asdf != sym->follows().size()) {
+                            hadUpdate = true;
+                        }
                         /* XXX ugly, change later */
+                        /* XXX also, add update flag code. */ 
                         if (updates.end() == (update = find(updates.begin(),
                                                             updates.end(),
                                                             *sym))) {
