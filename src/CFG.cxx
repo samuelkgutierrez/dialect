@@ -446,8 +446,17 @@ CFG::propagateFollows(CFGProductions &productions,
                       const vector<Symbol> &what)
 {
     for (CFGProduction &p : productions) {
-        vector<Symbol>::const_iterator sym;
-        if (what.end() != (sym = find(what.begin(), what.end(), p.lhs()))) {
+        vector<Symbol>::const_iterator i;
+        if (what.end() != (i = find(what.begin(), what.end(), p.lhs()))) {
+            p.lhs().follows().insert(const_cast<Symbol &>(*i).follows().begin(),
+                                     const_cast<Symbol &>(*i).follows().end());
+        }
+        for (Symbol &sym : p.rhs()) {
+            if (what.end() != (i = find(what.begin(), what.end(), sym))) {
+                sym.follows().insert(const_cast<Symbol &>(*i).follows().begin(),
+                                     const_cast<Symbol &>(*i).follows().end());
+
+            }
         }
     }
 }
@@ -683,26 +692,37 @@ CFG::computeFollowSets(void)
         if (this->verbose) dout << __func__ << ": in main loop" << endl;
         hadUpdate = false;
         vector<Symbol> updates;
+        vector<Symbol>::iterator update;
         for (CFGProduction &p : this->cleanProductions) {
             if (!p.lhs().marked()) {
                 for (auto sym = p.rhs().begin(); p.rhs().end() != sym; ++sym) {
                     if (!sym->isTerminal() && sym != p.rhs().end()) {
                         /* safe because we know that sym != rhs().end() */
-                        Symbol rneighbor = *(sym + 1);
+                        advance(sym, 1);
+                        Symbol rneighbor = *sym;
                         sym->follows().insert(rneighbor.firsts().begin(),
                                               rneighbor.firsts().end());
                         if (this->nullable(*sym)) {
                             sym->follows().insert(p.lhs().follows().begin(),
                                                   p.lhs().follows().end());
                         }
-                        updates.push_back(*sym);
+                        if (updates.end() == (update = find(updates.begin(),
+                                                            updates.end(),
+                                                            *sym))) {
+                            updates.push_back(*sym);
+                        }
+                        /* sym is already in the updates vector, so just add to
+                         * the follow set. */
+                        else {
+                            update->follows().insert(sym->follows().begin(),
+                                                     sym->follows().end());
+                        }
+                        sym->mark();
                     }
-                    sym->mark();
                 }
                 if (this->verbose) dout << "  marking " << p.lhs() << endl;
                 p.lhs().mark(true);
                 CFG::propagateFollows(this->cleanProductions, updates);
-                markAllRHS(this->cleanProductions, p.lhs().sym());
                 hadUpdate = true;
             }
         }
