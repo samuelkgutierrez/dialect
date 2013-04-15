@@ -695,14 +695,19 @@ CFG::computeFollowSets(void)
         vector<Symbol>::iterator update;
         for (CFGProduction &p : this->cleanProductions) {
             if (!p.lhs().marked()) {
-                for (auto sym = p.rhs().begin(); p.rhs().end() != sym; ++sym) {
-                    if (!sym->isTerminal() && sym != p.rhs().end()) {
+                auto sym = p.rhs().begin();
+                while (sym != p.rhs().end()) {
+                    if (!sym->isTerminal()) {
                         /* safe because we know that sym != rhs().end() */
                         advance(sym, 1);
+                        if (p.rhs().end() == sym) {
+                            continue;
+                        }
                         Symbol rneighbor = *sym;
+                        advance(sym, -1);
                         sym->follows().insert(rneighbor.firsts().begin(),
                                               rneighbor.firsts().end());
-                        if (this->nullable(*sym)) {
+                        if (this->nullable(rneighbor)) {
                             sym->follows().insert(p.lhs().follows().begin(),
                                                   p.lhs().follows().end());
                         }
@@ -719,6 +724,7 @@ CFG::computeFollowSets(void)
                         }
                         sym->mark();
                     }
+                    ++sym;
                 }
                 if (this->verbose) dout << "  marking " << p.lhs() << endl;
                 p.lhs().mark(true);
@@ -728,8 +734,19 @@ CFG::computeFollowSets(void)
         }
         if (!hadUpdate) if (this->verbose) dout << "  done!" << endl;
     } while (hadUpdate);
-
     if (this->verbose) {
+        dout << __func__ << ": here are the follow sets:" << endl;
+        set<Symbol> lhsSet;
+        for (const CFGProduction &p : this->cleanProductions) {
+            lhsSet.insert(const_cast<CFGProduction &>(p).lhs());
+            vector<Symbol> rhs = const_cast<CFGProduction &>(p).rhs();
+            lhsSet.insert(rhs.begin(), rhs.end());
+        }
+        for (const Symbol &sym : lhsSet) {
+            dout << sym << " begin" << endl;
+            CFG::emitAllMembers(const_cast<Symbol &>(sym).follows());
+            dout << sym << " end" << endl;
+        }
         dout << __func__ << ": end ***" << endl;
         dout << endl;
     }
