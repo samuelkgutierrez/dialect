@@ -134,8 +134,7 @@ ReachabilityMarker::mark(CFGProductions &productions) const
 {
     /* this one is easy. mark the start symbol. */
     for (CFGProduction &p : productions) {
-        if (p.lhs().start()) p.lhs().mark(true);
-        else p.lhs().mark(false);
+        p.lhs().mark(p.lhs().start());
         for (Symbol &sym : p.rhs()) {
             sym.mark(sym.start());
         }
@@ -148,9 +147,9 @@ NullableMarker::mark(CFGProductions &productions) const
 {
     /* start by marking all epsilons */
     for (CFGProduction &p : productions) {
-        p.lhs().mark(p.lhs().isEpsilon());
+        p.lhs().mark(p.lhs().epsilon());
         for (Symbol &sym : p.rhs()) {
-            sym.mark(sym.isEpsilon());
+            sym.mark(sym.epsilon());
         }
     }
 }
@@ -541,7 +540,7 @@ CFG::refreshFirstSets(void)
     for (CFGProduction &p : this->productions) {
         for (Symbol &sym : p.rhs()) {
             /* add myself to my firsts if not epsilon 8-| */
-            if (sym.terminal() && !sym.isEpsilon()) {
+            if (sym.terminal() && !sym.epsilon()) {
                 sym.firsts().insert(sym);
             }
         }

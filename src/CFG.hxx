@@ -41,7 +41,7 @@ private:
     /* flag indicating whether or not this symbol is the start symbol */
     bool _start;
     /* flag indicating whether or not this symbol is epsilon */
-    bool epsilon;
+    bool _epsilon;
     /* flag indicating whether or not this symbol is nullable */
     bool _nullable;
     /* first set for symbol */
@@ -52,18 +52,18 @@ private:
 public:
     /* nothing */
     static const std::string DEAD;
-    /* epsilon */
+    /* epsilon string representation */
     static const std::string EPSILON;
-    /* real start symbol */
+    /* real start symbol string */
     static const std::string START;
-    /* special terminal symbol */
+    /* special terminal symbol string */
     static const std::string END;
     /* all "valid" symbols will be exactly one character in length */
     Symbol(void) : marker(false),
                    symbol(Symbol::DEAD),
                    _terminal(false),
                    _start(false),
-                   epsilon(false),
+                   _epsilon(false),
                    _nullable(false) { ; }
 
     Symbol(const std::string &sym,
@@ -73,7 +73,7 @@ public:
                                  symbol(sym),
                                  _terminal(terminal),
                                  _start(start),
-                                 epsilon(Symbol::EPSILON == symbol),
+                                 _epsilon(Symbol::EPSILON == symbol),
                                  _nullable(Symbol::EPSILON == symbol) { ; }
 
     ~Symbol(void) { ; }
@@ -92,7 +92,7 @@ public:
 
     bool start(void) const { return this->_start; }
 
-    bool isEpsilon(void) const { return this->epsilon; }
+    bool epsilon(void) const { return this->_epsilon; }
 
     bool nullable(void) const { return this->_nullable; }
 
