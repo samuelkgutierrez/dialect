@@ -60,6 +60,25 @@ propagateNullable(CFGProductions &productions,
 
 /* ////////////////////////////////////////////////////////////////////////// */
 static void
+propagateFirsts(CFGProductions &productions,
+                const Symbol &symbol,
+                const set<Symbol> &fset)
+{
+    for (CFGProduction &p : productions) {
+        if (symbol == p.lhs()) {
+            p.lhs().firsts().insert(fset.begin(), fset.end());
+        }
+        for (Symbol &sym : p.rhs()) {
+            if (symbol == sym) {
+                sym.firsts().insert(fset.begin(), fset.end());
+            }
+        }
+    }
+}
+
+
+/* ////////////////////////////////////////////////////////////////////////// */
+static void
 emitNullables(const CFGProductions &productions)
 {
     set<Symbol> nullables;
@@ -421,25 +440,6 @@ CFG::getTerminals(void) const
 }
 
 /* ////////////////////////////////////////////////////////////////////////// */
-/* XXX FIXME rm firstSet */
-void
-CFG::propagateFirsts(CFGProductions &productions,
-                     const Symbol &symbol,
-                     const set<Symbol> &firstSet)
-{
-    for (CFGProduction &p : productions) {
-        if (symbol == p.lhs()) {
-            p.lhs().firsts().insert(firstSet.begin(), firstSet.end());
-        }
-        for (Symbol &sym : p.rhs()) {
-            if (symbol == sym) {
-                sym.firsts().insert(firstSet.begin(), firstSet.end());
-            }
-        }
-    }
-}
-
-/* ////////////////////////////////////////////////////////////////////////// */
 void
 CFG::propagateFollows(CFGProductions &productions,
                       const Symbol &s)
@@ -648,9 +648,7 @@ CFG::computeFirstSets(void)
                 set<Symbol> aub = getAlphaUBeta(p.rhs());
                 p.lhs().firsts().insert(aub.begin(), aub.end());
             }
-            CFG::propagateFirsts(this->productions,
-                                 p.lhs().sym(),
-                                 p.lhs().firsts());
+            propagateFirsts(this->productions, p.lhs().sym(), p.lhs().firsts());
             if (nelems != p.lhs().firsts().size()) hadUpdate = true;
         }
     } while (hadUpdate);
