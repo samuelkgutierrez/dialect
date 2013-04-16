@@ -726,16 +726,16 @@ CFG::computeFollowSets(void)
                     }
                     else {
                         /* safe because rhss not last element */
-                        advance(rhss, 1);
+                        ++rhss;
                         vector<Symbol> slice(rhss, p.rhs().end());
                         set<Symbol> fob = firstOfBeta(slice);
                         if (nullableFromHere(p.rhs(), rhss)) {
-                            advance(rhss, -1);
+                            --rhss;
                             rhss->follows().insert(p.lhs().follows().begin(),
                                                    p.lhs().follows().end());
-                            advance(rhss, 1);
+                            ++rhss;
                         }
-                        advance(rhss, -1);
+                        --rhss;
                         rhss->follows().insert(fob.begin(), fob.end());
                     }
                     if (nelems != rhss->follows().size()) hadUpdate = true;
