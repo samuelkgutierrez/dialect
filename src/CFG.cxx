@@ -28,6 +28,61 @@ using namespace std;
 
 /* ////////////////////////////////////////////////////////////////////////// */
 /* ////////////////////////////////////////////////////////////////////////// */
+/* static utility functions */
+/* ////////////////////////////////////////////////////////////////////////// */
+/* ////////////////////////////////////////////////////////////////////////// */
+
+/* ////////////////////////////////////////////////////////////////////////// */
+static void
+propagateMark(CFGProductions &productions,
+              const Symbol &symbol)
+{
+    for (CFGProduction &p : productions) {
+        if (symbol == p.lhs()) p.lhs().mark(true);
+        for (Symbol &sym : p.rhs()) {
+            if (symbol == sym) sym.mark(true);
+        }
+    }
+}
+
+/* ////////////////////////////////////////////////////////////////////////// */
+static void
+propagateNullable(CFGProductions &productions,
+                  const Symbol &symbol)
+{
+    for (CFGProduction &p : productions) {
+        if (symbol == p.lhs()) p.lhs().nullable(true);
+        for (Symbol &sym : p.rhs()) {
+            if (symbol == sym) sym.nullable(true);
+        }
+    }
+}
+
+/* ////////////////////////////////////////////////////////////////////////// */
+static void
+emitNullables(const CFGProductions &productions)
+{
+    set<Symbol> nullables;
+
+    for (CFGProduction p : productions) {
+        if (p.lhs().nullable() && !p.lhs().terminal()) {
+            nullables.insert(p.lhs());
+        }
+        for (const Symbol &s : p.rhs()) {
+            if (s.nullable() && !s.terminal()) nullables.insert(s);
+        }
+    }
+    if (0 != nullables.size()) {
+        dout << "here are the nullable non-terminals: ";
+        CFG::emitAllMembers(nullables, false);
+    }
+    else {
+        dout << "did not find nullable non-terminals!" << endl;
+    }
+}
+
+/* ////////////////////////////////////////////////////////////////////////// */
+/* ////////////////////////////////////////////////////////////////////////// */
 /* Symbol */
 /* ////////////////////////////////////////////////////////////////////////// */
 /* ////////////////////////////////////////////////////////////////////////// */
@@ -213,7 +268,7 @@ UnreachableHygiene::go(CFGProductions &productions) const
         for (CFGProduction &p : productions) {
             if (p.lhs().marked() && !p.rhsMarked()) {
                 for (Symbol &sym : p.rhs()) {
-                    CFG::propagateMark(productions, sym.sym());
+                    propagateMark(productions, sym.sym());
                 }
                 hadUpdate = true;
             }
@@ -231,7 +286,7 @@ NonGeneratingHygiene::go(CFGProductions &productions) const
         for (CFGProduction &p : productions) {
             if (!p.lhs().marked() && p.rhsMarked()) {
                 /* make sure that we update all instances of lhs()->sym() */
-                CFG::propagateMark(productions, p.lhs().sym());
+                propagateMark(productions, p.lhs().sym());
                 hadUpdate = true;
             }
         }
@@ -366,19 +421,6 @@ CFG::getTerminals(void) const
 }
 
 /* ////////////////////////////////////////////////////////////////////////// */
-void
-CFG::propagateMark(CFGProductions &productions,
-                   const Symbol &symbol)
-{
-    for (CFGProduction &p : productions) {
-        if (symbol == p.lhs()) p.lhs().mark(true);
-        for (Symbol &sym : p.rhs()) {
-            if (symbol == sym) sym.mark(true);
-        }
-    }
-}
-
-/* ////////////////////////////////////////////////////////////////////////// */
 /* XXX FIXME rm firstSet */
 void
 CFG::propagateFirsts(CFGProductions &productions,
@@ -504,7 +546,6 @@ CFG::parseTablePrep(void)
 void
 CFG::computeNullable(void)
 {
-    //CFGProductions pCopy = this->productions;
     NullableMarker marker; marker.beVerbose(this->verbose);
     bool hadUpdate;
 
@@ -518,24 +559,16 @@ CFG::computeNullable(void)
         hadUpdate = false;
         for (CFGProduction &p : this->productions) {
             if (p.rhsMarked() && !p.lhs().marked()) {
-                CFG::propagateMark(this->productions, p.lhs().sym());
+                p.lhs().nullable(true);
+                propagateMark(this->productions, p.lhs().sym());
+                propagateNullable(this->productions, p.lhs().sym());
                 hadUpdate = true;
-                /* add this symbol to the nullable set */
-                /* XXX RM this */
-                this->nullableSet.insert(p.lhs().sym());
             }
         }
     } while (hadUpdate);
 
     if (this->verbose) {
-        if (0 != this->nullableSet.size()) {
-            dout << __func__ << ": here are the nullable non-terminals: ";
-            CFG::emitAllMembers(this->nullableSet, false);
-        }
-        else {
-            dout << __func__ << ": did not find nullable non-terminals!"
-                 << endl;
-        }
+        emitNullables(this->productions);
         dout << __func__ << ": nullable fixed-point end ***" << endl;
         dout << endl;
     }

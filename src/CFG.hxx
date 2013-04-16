@@ -96,6 +96,8 @@ public:
 
     bool nullable(void) const { return this->_nullable; }
 
+    void nullable(bool n) { this->_nullable = n; }
+
     std::set<Symbol> &firsts(void) { return this->firstSet; }
 
     std::set<Symbol> &follows(void) { return this->followSet; }
@@ -225,8 +227,6 @@ private:
     bool verbose;
     /* grammar productions */
     CFGProductions productions;
-    /* nullable set */
-    std::set<Symbol> nullableSet;
     /* refresh some internal state */
     void refresh(void);
     /* compute nullable set */
@@ -278,9 +278,6 @@ public:
                          const CFGProductionEraser &eraser,
                          const CFGProductionHygieneAlgo &algo,
                          const CFGProductions &old) const;
-    /* performs grammar hygiene operations on the calling instance */
-    static void propagateMark(CFGProductions &productions,
-                              const Symbol &symbol);
 
     void clean(void);
 };
