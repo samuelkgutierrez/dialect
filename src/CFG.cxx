@@ -668,6 +668,8 @@ CFG::followsetPrep(void)
     /* add a new, special terminal, $ and new start production */
     CFGProduction newp(Symbol::START, this->startSymbol().sym() + Symbol::END);
     this->productions.insert(this->productions.begin(), newp);
+    /* init S''s follow set to include $ */
+    this->productions.begin()->lhs().follows().insert(Symbol(Symbol::END));
     this->refresh();
     this->refreshFirstSets();
 }
@@ -687,8 +689,8 @@ static set<Symbol>
 firstOfBeta(const vector<Symbol> &in)
 {
     vector<Symbol> cin = in;
-    set<Symbol> fob;
     vector<Symbol>::iterator i = cin.begin();
+    set<Symbol> fob;
 
     /* now figure out FIRST(beta) */
     while (cin.end() != i) {
