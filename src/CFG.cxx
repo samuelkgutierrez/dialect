@@ -444,15 +444,15 @@ void
 CFG::propagateFollows(CFGProductions &productions,
                       const Symbol &s)
 {
+    Symbol t = s;
+
     for (CFGProduction &p : productions) {
-        if (s == p.lhs()) {
-            p.lhs().follows().insert(const_cast<Symbol &>(s).follows().begin(),
-                                     const_cast<Symbol &>(s).follows().end());
+        if (t == p.lhs()) {
+            p.lhs().follows().insert(t.follows().begin(), t.follows().end());
         }
         for (Symbol &sym : p.rhs()) {
-            if (s == sym) {
-                sym.follows().insert(const_cast<Symbol &>(s).follows().begin(),
-                                     const_cast<Symbol &>(s).follows().end());
+            if (t == sym) {
+                sym.follows().insert(t.follows().begin(), t.follows().end());
             }
         }
     }
@@ -669,8 +669,38 @@ CFG::followsetPrep(void)
     CFGProduction newp(Symbol::START, this->startSymbol().sym() + Symbol::END);
     this->productions.insert(this->productions.begin(), newp);
     /* init S''s follow set to include $ */
-    //this->productions.begin()->lhs().follows().insert(Symbol(Symbol::END));
+    /* XXX ? */
+    this->productions.begin()->lhs().follows().insert(Symbol(Symbol::END));
+    /* XXX ? */
+    this->refresh();
     this->refreshFirstSets();
+}
+
+/* ////////////////////////////////////////////////////////////////////////// */
+static bool
+nullableFromHere(const vector<Symbol> &l, vector<Symbol>::iterator i)
+{
+    for (; l.end() != i; ++i) {
+        if (!i->nullable()) return false;
+    }
+    return true;
+}
+
+/* ////////////////////////////////////////////////////////////////////////// */
+static set<Symbol>
+firstOfBeta(const vector<Symbol> &in)
+{
+    vector<Symbol> cin = in;
+    set<Symbol> fob;
+    vector<Symbol>::iterator i = cin.begin();
+
+    /* now figure out FIRST(beta) */
+    while (cin.end() != i) {
+        fob.insert(i->firsts().begin(), i->firsts().end());
+        if (!i->nullable()) break;
+        else ++i;
+    }
+    return fob;
 }
 
 /* ////////////////////////////////////////////////////////////////////////// */
@@ -698,17 +728,17 @@ CFG::computeFollowSets(void)
                     }
                     else {
                         /* safe because rhss not last element */
-                        Symbol rn;
                         advance(rhss, 1);
-                        rn = *rhss;
-                        advance(rhss, -1);
-                        rhss->follows().insert(rn.firsts().begin(),
-                                               rn.firsts().end());
-                        /* XXX FIX */
-                        if (rn.nullable()) {
+                        vector<Symbol> slice(rhss, p.rhs().end());
+                        set<Symbol> fob = firstOfBeta(slice);
+                        if (nullableFromHere(p.rhs(), rhss)) {
+                            advance(rhss, -1);
                             rhss->follows().insert(p.lhs().follows().begin(),
                                                    p.lhs().follows().end());
+                            advance(rhss, 1);
                         }
+                        advance(rhss, -1);
+                        rhss->follows().insert(fob.begin(), fob.end());
                     }
                     if (nelems != rhss->follows().size()) hadUpdate = true;
                     CFG::propagateFollows(this->productions, *rhss);
