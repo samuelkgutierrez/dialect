@@ -145,7 +145,6 @@ ReachabilityMarker::mark(CFGProductions &productions) const
 void
 NullableMarker::mark(CFGProductions &productions) const
 {
-    /* start by marking all epsilons */
     for (CFGProduction &p : productions) {
         p.lhs().mark(p.lhs().epsilon());
         for (Symbol &sym : p.rhs()) {
@@ -158,10 +157,8 @@ NullableMarker::mark(CFGProductions &productions) const
 void
 FollowSetMarker::mark(CFGProductions &productions) const
 {
-    /* this one is easy, just mark all terminals */
     for (CFGProduction &p : productions) {
-        /* left-hand sides are always non-terminals */
-        p.lhs().mark(false);
+        p.lhs().mark(p.lhs().terminal());
         for (Symbol &sym : p.rhs()) {
             sym.mark(sym.terminal());
         }
@@ -172,32 +169,38 @@ FollowSetMarker::mark(CFGProductions &productions) const
 void
 NonGeneratingEraser::erase(CFGProductions &productions) const
 {
+    bool rm = false;
     if (this->verbose) {
         dout << "removing non-generating symbols..." << endl;
     }
     for (auto p = productions.begin(); productions.end() != p;) {
         if (!p->lhs().marked() || !p->rhsMarked()) {
             if (this->verbose) dout << "  rm " << *p << endl;
+            rm = true;
             p = productions.erase(p);
         }
         else ++p;
     }
+    if (!rm && this->verbose) dout << "  none found" << endl;
 }
 
 /* ////////////////////////////////////////////////////////////////////////// */
 void
 UnreachableEraser::erase(CFGProductions &productions) const
 {
+    bool rm = false;
     if (this->verbose) {
         dout << "removing unreachable symbols..." << endl;
     }
     for (auto p = productions.begin(); productions.end() != p;) {
         if (!p->lhs().marked()) {
             if (this->verbose) dout << "  rm " << *p << endl;
+            rm = true;
             p = productions.erase(p);
         }
         else ++p;
     }
+    if (!rm && this->verbose) dout << "  none found" << endl;
 }
 
 /* ////////////////////////////////////////////////////////////////////////// */
@@ -210,7 +213,7 @@ UnreachableHygiene::go(CFGProductions &productions) const
         for (CFGProduction &p : productions) {
             if (p.lhs().marked() && !p.rhsMarked()) {
                 for (Symbol &sym : p.rhs()) {
-                    CFG::markAllSymbols(productions, sym.sym());
+                    CFG::propagateMark(productions, sym.sym());
                 }
                 hadUpdate = true;
             }
@@ -228,7 +231,7 @@ NonGeneratingHygiene::go(CFGProductions &productions) const
         for (CFGProduction &p : productions) {
             if (!p.lhs().marked() && p.rhsMarked()) {
                 /* make sure that we update all instances of lhs()->sym() */
-                CFG::markAllSymbols(productions, p.lhs().sym());
+                CFG::propagateMark(productions, p.lhs().sym());
                 hadUpdate = true;
             }
         }
@@ -260,6 +263,8 @@ refreshSymbolTypes(CFGProductions &prods)
         p.lhs().terminal(false);
         p.lhs().start(p.lhs() == start);
         nonTerms.insert(p.lhs());
+    }
+    for (CFGProduction &p : prods) {
         for (Symbol &s : p.rhs()) {
             s.terminal(nonTerms.end() == nonTerms.find(s));
             s.start(s == start);
@@ -336,8 +341,11 @@ CFG::getNonTerminals(void) const
 {
     set<Symbol> nonTerms;
 
-    for (const CFGProduction &p : this->productions) {
-        nonTerms.insert(const_cast<CFGProduction &>(p).lhs());
+    for (CFGProduction p : this->productions) {
+        if (!p.lhs().terminal()) nonTerms.insert(p.lhs());
+        for (const Symbol &s : p.rhs()) {
+            if (!s.terminal()) nonTerms.insert(s);
+        }
     }
     return nonTerms;
 }
@@ -346,12 +354,12 @@ CFG::getNonTerminals(void) const
 set<Symbol>
 CFG::getTerminals(void) const
 {
-    set<Symbol> nonTerms = this->getNonTerminals();
     set<Symbol> terms;
 
-    for (const CFGProduction &production : this->productions) {
-        for (const Symbol &s : const_cast<CFGProduction &>(production).rhs()) {
-            if (nonTerms.end() == nonTerms.find(s)) terms.insert(s);
+    for (CFGProduction p : this->productions) {
+        if (p.lhs().terminal()) terms.insert(p.lhs());
+        for (const Symbol &s : p.rhs()) {
+            if (s.terminal()) terms.insert(s);
         }
     }
     return terms;
@@ -359,8 +367,8 @@ CFG::getTerminals(void) const
 
 /* ////////////////////////////////////////////////////////////////////////// */
 void
-CFG::markAllSymbols(CFGProductions &productions,
-                    const Symbol &symbol)
+CFG::propagateMark(CFGProductions &productions,
+                   const Symbol &symbol)
 {
     for (CFGProduction &p : productions) {
         if (symbol == p.lhs()) p.lhs().mark(true);
@@ -510,7 +518,7 @@ CFG::computeNullable(void)
         hadUpdate = false;
         for (CFGProduction &p : this->productions) {
             if (p.rhsMarked() && !p.lhs().marked()) {
-                CFG::markAllSymbols(this->productions, p.lhs().sym());
+                CFG::propagateMark(this->productions, p.lhs().sym());
                 hadUpdate = true;
                 /* add this symbol to the nullable set */
                 /* XXX RM this */

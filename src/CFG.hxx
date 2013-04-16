@@ -279,8 +279,8 @@ public:
                          const CFGProductionHygieneAlgo &algo,
                          const CFGProductions &old) const;
     /* performs grammar hygiene operations on the calling instance */
-    static void markAllSymbols(CFGProductions &productions,
-                               const Symbol &symbol);
+    static void propagateMark(CFGProductions &productions,
+                              const Symbol &symbol);
 
     void clean(void);
 };
