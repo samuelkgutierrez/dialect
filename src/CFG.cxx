@@ -359,16 +359,14 @@ template <typename T>
 void
 CFG::emitAllMembers(const T &t, bool nls)
 {
-    typename T::const_iterator member;
-
     if (nls) {
-        for (member = t.begin(); t.end() != member; ++member) {
+        for (auto member = t.begin(); t.end() != member; ++member) {
             dout << "  " << *member << endl;
         }
     }
     else {
         cout << "{";
-        for (member = t.begin(); t.end() != member; ++member) {
+        for (auto member = t.begin(); t.end() != member; ++member) {
             if (member != t.begin()) cout << ", ";
             cout << *member;
         }
