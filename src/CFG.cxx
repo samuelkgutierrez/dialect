@@ -76,6 +76,18 @@ propagateFirsts(CFGProductions &productions,
     }
 }
 
+/* ////////////////////////////////////////////////////////////////////////// */
+template <typename T>
+static bool
+lastElem(const T &l, typename T::iterator i)
+{
+    bool res = false;
+
+    advance(i, 1);
+    res = (l.end() == i);
+    advance(i, -1);
+    return res;
+}
 
 /* ////////////////////////////////////////////////////////////////////////// */
 static void
@@ -223,18 +235,6 @@ NullableMarker::mark(CFGProductions &productions) const
         p.lhs().mark(p.lhs().epsilon());
         for (Symbol &sym : p.rhs()) {
             sym.mark(sym.epsilon());
-        }
-    }
-}
-
-/* ////////////////////////////////////////////////////////////////////////// */
-void
-FollowSetMarker::mark(CFGProductions &productions) const
-{
-    for (CFGProduction &p : productions) {
-        p.lhs().mark(p.lhs().terminal());
-        for (Symbol &sym : p.rhs()) {
-            sym.mark(sym.terminal());
         }
     }
 }
@@ -662,18 +662,6 @@ CFG::computeFirstSets(void)
 }
 
 /* ////////////////////////////////////////////////////////////////////////// */
-static bool
-lastElem(const vector<Symbol> &l, vector<Symbol>::iterator i)
-{
-    bool res = false;
-
-    advance(i, 1);
-    res = (l.end() == i);
-    advance(i, -1);
-    return res;
-}
-
-/* ////////////////////////////////////////////////////////////////////////// */
 void
 CFG::followsetPrep(void)
 {
@@ -681,7 +669,7 @@ CFG::followsetPrep(void)
     CFGProduction newp(Symbol::START, this->startSymbol().sym() + Symbol::END);
     this->productions.insert(this->productions.begin(), newp);
     /* init S''s follow set to include $ */
-    this->productions.begin()->lhs().follows().insert(Symbol(Symbol::END));
+    //this->productions.begin()->lhs().follows().insert(Symbol(Symbol::END));
     this->refreshFirstSets();
 }
 
@@ -691,14 +679,10 @@ CFG::computeFollowSets(void)
 {
     size_t nelems = 0;
     bool hadUpdate = false;
-    FollowSetMarker marker;
 
     if (this->verbose) dout << __func__ << ": begin ***" << endl;
 
     this->followsetPrep();
-
-    /* reset markers before we start calculating follow sets */
-    marker.mark(this->productions);
 
     do {
         hadUpdate = false;
