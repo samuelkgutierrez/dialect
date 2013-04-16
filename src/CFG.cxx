@@ -134,10 +134,10 @@ ReachabilityMarker::mark(CFGProductions &productions) const
 {
     /* this one is easy. mark the start symbol. */
     for (CFGProduction &p : productions) {
-        if (p.lhs().isStart()) p.lhs().mark(true);
+        if (p.lhs().start()) p.lhs().mark(true);
         else p.lhs().mark(false);
         for (Symbol &sym : p.rhs()) {
-            sym.mark(sym.isStart());
+            sym.mark(sym.start());
         }
     }
 }
@@ -253,45 +253,33 @@ NonGeneratingHygiene::go(CFGProductions &productions) const
 CFG::CFG(const CFGProductions &productions)
 {
     this->verbose = false;
-    /* we can't assume that the vector of productions that we are being passed
-     * is completely valid. that is, some symbol information may be incorrect.
-     * so, first take the incomplete productions vector and generate a fully
-     * populated production vector that we can trust. this vector will be built
-     * from the parsed CFG, so it may not be "clean." */
-    this->productions = CFG::refresh(productions);
+    this->productions = productions;
+    this->refresh();
 }
 
 /* ////////////////////////////////////////////////////////////////////////// */
-CFGProductions
-CFG::refresh(const CFGProductions &productions)
+static void
+refreshSymbolTypes(CFGProductions &prods)
 {
-    /* fully populated productions */
-    CFGProductions refresh = productions;
-    /* set of non-terminals */
-    set<Symbol> nonTerminals;
+    set<Symbol> nonTerms;
+    Symbol start = prods.begin()->lhs();
 
-    /* stash the start symbol */
-    CFGProduction firstProduction = *productions.begin();
-    Symbol startSymbol = firstProduction.lhs();
-
-    /* first mark all non-terminals on the lhs and add to nonTerminals */
-    for (CFGProduction &prod : refresh) {
-        prod.lhs().terminal(false);
-        nonTerminals.insert(prod.lhs());
-        prod.lhs().setIsStart(startSymbol == prod.lhs());
-    }
-    /* now that we know about all the non-terminals, finish setup by updating
-     * the symbols on the right-hand side. */
-    for (CFGProduction &prod : refresh) {
-        /* iterate over all the symbols on the rhs */
-        for (Symbol &sym : prod.rhs()) {
-            /* if not in set of non-terminals, so must be a terminal
-             * else must be a non-terminal on the rhs */
-            sym.terminal(nonTerminals.end() == nonTerminals.find(sym));
-            sym.setIsStart(startSymbol == sym);
+    for (CFGProduction &p : prods) {
+        p.lhs().terminal(false);
+        p.lhs().start(p.lhs() == start);
+        nonTerms.insert(p.lhs());
+        for (Symbol &s : p.rhs()) {
+            s.terminal(nonTerms.end() == nonTerms.find(s));
+            s.start(s == start);
         }
     }
-    return refresh;
+}
+
+/* ////////////////////////////////////////////////////////////////////////// */
+void
+CFG::refresh(void)
+{
+    refreshSymbolTypes(this->productions);
 }
 
 /* ////////////////////////////////////////////////////////////////////////// */
@@ -365,11 +353,12 @@ CFG::getNonTerminals(void) const
 set<Symbol>
 CFG::getTerminals(void) const
 {
+    set<Symbol> nonTerms = this->getNonTerminals();
     set<Symbol> terms;
 
     for (const CFGProduction &production : this->productions) {
         for (const Symbol &s : const_cast<CFGProduction &>(production).rhs()) {
-            if (s.terminal()) terms.insert(s);
+            if (nonTerms.end() == nonTerms.find(s)) terms.insert(s);
         }
     }
     return terms;
@@ -647,8 +636,6 @@ CFG::followsetPrep(void)
     this->productions.insert(this->productions.begin(), newp);
     /* init S''s follow set to include $ */
     this->productions.begin()->lhs().follows().insert(Symbol(Symbol::END));
-    /* refresh productions */
-    this->productions = CFG::refresh(this->productions);
     this->refreshFirstSets();
 }
 

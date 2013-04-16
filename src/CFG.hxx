@@ -39,7 +39,7 @@ private:
     /* flag indicating whether or not this symbol is a terminal symbol */
     bool _terminal;
     /* flag indicating whether or not this symbol is the start symbol */
-    bool start;
+    bool _start;
     /* flag indicating whether or not this symbol is epsilon */
     bool epsilon;
     /* flag indicating whether or not this symbol is nullable */
@@ -62,19 +62,19 @@ public:
     Symbol(void) : marker(false),
                    symbol(Symbol::DEAD),
                    _terminal(false),
-                   start(false),
+                   _start(false),
                    epsilon(false),
                    _nullable(false) { ; }
 
     Symbol(const std::string &sym,
            bool marked = false,
            bool terminal = false,
-           bool isStart = false) : marker(marked),
-                                   symbol(sym),
-                                   _terminal(terminal),
-                                   start(isStart),
-                                   epsilon(Symbol::EPSILON == symbol),
-                                   _nullable(Symbol::EPSILON == symbol) { ; }
+           bool start = false) : marker(marked),
+                                 symbol(sym),
+                                 _terminal(terminal),
+                                 _start(start),
+                                 epsilon(Symbol::EPSILON == symbol),
+                                 _nullable(Symbol::EPSILON == symbol) { ; }
 
     ~Symbol(void) { ; }
 
@@ -88,9 +88,9 @@ public:
 
     void terminal(bool is) { this->_terminal = is; }
 
-    void setIsStart(bool is = true) { this->start = is; }
+    void start(bool is) { this->_start = is; }
 
-    bool isStart(void) const { return this->start; }
+    bool start(void) const { return this->_start; }
 
     bool isEpsilon(void) const { return this->epsilon; }
 
@@ -227,6 +227,8 @@ private:
     CFGProductions productions;
     /* nullable set */
     std::set<Symbol> nullableSet;
+    /* refresh some internal state */
+    void refresh(void);
     /* compute nullable set */
     void computeNullable(void);
     /* first step when computing first sets */
