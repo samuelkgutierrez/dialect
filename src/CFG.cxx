@@ -79,8 +79,9 @@ propagateFirsts(CFGProductions &productions,
 /* ////////////////////////////////////////////////////////////////////////// */
 template <typename T>
 static bool
-lastElem(const T &l, typename T::iterator i)
+lastElem(const T &l)
 {
+    typename T::const_iterator i = l.begin();
     bool res = false;
 
     advance(i, 1);
@@ -720,7 +721,8 @@ CFG::computeFollowSets(void)
                 if (!rhss->terminal()) {
                     nelems = rhss->follows().size();
                     /* for the case where beta is empty */
-                    if (lastElem(p.rhs(), rhss)) {
+                    vector<Symbol> slice(rhss, p.rhs().end());
+                    if (lastElem(slice)) {
                         rhss->follows().insert(p.lhs().follows().begin(),
                                                p.lhs().follows().end());
                     }
