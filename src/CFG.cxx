@@ -89,7 +89,8 @@ CFGProduction::CFGProduction(const string &lhs,
                              const string &rhs)
 {
     /* left-hand side symbols are always non-terminals, but we'll just init
-     * everything with similarly. */
+     * everything similarly in this path because we really can't telly anything
+     * about this grammar at this point only given production strings. */
     this->leftHandSide = Symbol(lhs);
     for (unsigned i = 0; i < rhs.length(); ++i) {
         /* at this point we don't know what type the symbols are. */
@@ -120,9 +121,9 @@ GeneratingMarker::mark(CFGProductions &productions) const
     /* init the symbol markers by marking all terminals and making sure that
      * non-terminals aren't marked at this point. */
     for (CFGProduction &p : productions) {
-        p.lhs().mark(false);
+        p.lhs().mark(p.lhs().terminal());
         for (Symbol &sym : p.rhs()) {
-            sym.mark(sym.isTerminal());
+            sym.mark(sym.terminal());
         }
     }
 }
@@ -163,7 +164,7 @@ FollowSetMarker::mark(CFGProductions &productions) const
         /* left-hand sides are always non-terminals */
         p.lhs().mark(false);
         for (Symbol &sym : p.rhs()) {
-            sym.mark(sym.isTerminal());
+            sym.mark(sym.terminal());
         }
     }
 }
@@ -279,7 +280,7 @@ CFG::buildFullyPopulatedGrammar(const CFGProductions &productions) const
 
     /* first mark all non-terminals on the lhs and add to nonTerminals */
     for (CFGProduction &prod : fpp) {
-        prod.lhs().setIsTerminal(false);
+        prod.lhs().terminal(false);
         nonTerminals.insert(prod.lhs());
         prod.lhs().setIsStart(startSymbol == prod.lhs());
     }
@@ -290,7 +291,7 @@ CFG::buildFullyPopulatedGrammar(const CFGProductions &productions) const
         for (Symbol &sym : prod.rhs()) {
             /* if not in set of non-terminals, so must be a terminal
              * else must be a non-terminal on the rhs */
-            sym.setIsTerminal(nonTerminals.end() == nonTerminals.find(sym));
+            sym.terminal(nonTerminals.end() == nonTerminals.find(sym));
             if (startSymbol == sym) sym.setIsStart(true);
         }
     }
@@ -372,7 +373,7 @@ CFG::getTerminals(void) const
 
     for (const CFGProduction &production : this->productions) {
         for (const Symbol &s : const_cast<CFGProduction &>(production).rhs()) {
-            if (s.isTerminal()) terms.insert(s);
+            if (s.terminal()) terms.insert(s);
         }
     }
     return terms;
@@ -561,7 +562,7 @@ CFG::refreshFirstSets(void)
     for (CFGProduction &p : this->productions) {
         for (Symbol &sym : p.rhs()) {
             /* add myself to my firsts if not epsilon 8-| */
-            if (sym.isTerminal() && !sym.isEpsilon()) {
+            if (sym.terminal() && !sym.isEpsilon()) {
                 sym.firsts().insert(sym);
             }
         }
@@ -675,7 +676,7 @@ CFG::computeFollowSets(void)
         for (CFGProduction &p : this->productions) {
             auto rhss = p.rhs().begin();
             while (p.rhs().end() != rhss) {
-                if (!rhss->isTerminal()) {
+                if (!rhss->terminal()) {
                     nelems = rhss->follows().size();
                     /* for the case where beta is empty */
                     if (lastElem(p.rhs(), rhss)) {

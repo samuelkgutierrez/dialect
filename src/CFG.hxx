@@ -37,7 +37,7 @@ private:
     /* string representation of the grammar symbol */
     std::string symbol;
     /* flag indicating whether or not this symbol is a terminal symbol */
-    bool terminal;
+    bool _terminal;
     /* flag indicating whether or not this symbol is the start symbol */
     bool start;
     /* flag indicating whether or not this symbol is epsilon */
@@ -61,17 +61,17 @@ public:
     /* all "valid" symbols will be exactly one character in length */
     Symbol(void) : marker(false),
                    symbol(Symbol::DEAD),
-                   terminal(false),
+                   _terminal(false),
                    start(false),
                    epsilon(false),
                    _nullable(false) { ; }
 
     Symbol(const std::string &sym,
            bool marked = false,
-           bool isTerminal = false,
+           bool terminal = false,
            bool isStart = false) : marker(marked),
                                    symbol(sym),
-                                   terminal(isTerminal),
+                                   _terminal(terminal),
                                    start(isStart),
                                    epsilon(Symbol::EPSILON == symbol),
                                    _nullable(Symbol::EPSILON == symbol) { ; }
@@ -84,9 +84,9 @@ public:
 
     void mark(bool m = true) { this->marker = m; }
 
-    bool isTerminal(void) const { return this->terminal; }
+    bool terminal(void) const { return this->_terminal; }
 
-    void setIsTerminal(bool is) { this->terminal = is; }
+    void terminal(bool is) { this->_terminal = is; }
 
     void setIsStart(bool is = true) { this->start = is; }
 
