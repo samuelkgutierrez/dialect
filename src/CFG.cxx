@@ -614,7 +614,7 @@ getAlphaUBeta(const vector<Symbol> &in)
 
     /* alpha's firsts are always going to be in the set */
     aub.insert(s->firsts().begin(), s->firsts().end());
-    advance(s, 1);
+    ++s;
     /* now figure out FIRST(beta) */
     while (cin.end() != s) {
         aub.insert(s->firsts().begin(), s->firsts().end());
@@ -726,7 +726,7 @@ CFG::computeFollowSets(void)
                                                    p.lhs().follows().end());
                         }
                     }
-                    hadUpdate = (nelems != rhss->follows().size());
+                    if (nelems != rhss->follows().size()) hadUpdate = true;
                     CFG::propagateFollows(this->productions, *rhss);
                 }
                 ++rhss;
