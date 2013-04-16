@@ -240,9 +240,6 @@ NonGeneratingHygiene::go(CFGProductions &productions) const
                 hadUpdate = true;
             }
         }
-        if (!hadUpdate) {
-            if (this->verbose) dout << "  done!" << endl;
-        }
     } while (hadUpdate);
 }
 
@@ -256,12 +253,11 @@ NonGeneratingHygiene::go(CFGProductions &productions) const
 CFG::CFG(const CFGProductions &productions)
 {
     this->verbose = false;
-
     /* we can't assume that the vector of productions that we are being passed
      * is completely valid. that is, some symbol information may be incorrect.
-     * so, first take the incomplete productions vector and generate a new,
-     * fully populated production vector that we can trust. this vector will
-     * be built from the parsed CFG, so it may not be "clean." */
+     * so, first take the incomplete productions vector and generate a fully
+     * populated production vector that we can trust. this vector will be built
+     * from the parsed CFG, so it may not be "clean." */
     this->productions = CFG::refresh(productions);
 }
 
@@ -270,7 +266,7 @@ CFGProductions
 CFG::refresh(const CFGProductions &productions)
 {
     /* fully populated productions */
-    CFGProductions fpp = productions;
+    CFGProductions refresh = productions;
     /* set of non-terminals */
     set<Symbol> nonTerminals;
 
@@ -279,23 +275,23 @@ CFG::refresh(const CFGProductions &productions)
     Symbol startSymbol = firstProduction.lhs();
 
     /* first mark all non-terminals on the lhs and add to nonTerminals */
-    for (CFGProduction &prod : fpp) {
+    for (CFGProduction &prod : refresh) {
         prod.lhs().terminal(false);
         nonTerminals.insert(prod.lhs());
         prod.lhs().setIsStart(startSymbol == prod.lhs());
     }
     /* now that we know about all the non-terminals, finish setup by updating
      * the symbols on the right-hand side. */
-    for (CFGProduction &prod : fpp) {
+    for (CFGProduction &prod : refresh) {
         /* iterate over all the symbols on the rhs */
         for (Symbol &sym : prod.rhs()) {
             /* if not in set of non-terminals, so must be a terminal
              * else must be a non-terminal on the rhs */
             sym.terminal(nonTerminals.end() == nonTerminals.find(sym));
-            if (startSymbol == sym) sym.setIsStart(true);
+            sym.setIsStart(startSymbol == sym);
         }
     }
-    return fpp;
+    return refresh;
 }
 
 /* ////////////////////////////////////////////////////////////////////////// */
