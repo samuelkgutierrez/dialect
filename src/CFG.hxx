@@ -74,7 +74,7 @@ public:
                                  _terminal(terminal),
                                  _start(start),
                                  _epsilon(Symbol::EPSILON == symbol),
-                                 _nullable(Symbol::EPSILON == symbol) { ; }
+                                 _nullable(false) { ; }
 
     ~Symbol(void) { ; }
 

@@ -590,7 +590,7 @@ CFG::refreshFirstSets(void)
 
 /* ////////////////////////////////////////////////////////////////////////// */
 static void
-emitFirstSet(const CFGProductions &prods)
+emitFirstSets(const CFGProductions &prods)
 {
     set<Symbol> lhsSet;
     for (const CFGProduction &p : prods) {
@@ -602,6 +602,26 @@ emitFirstSet(const CFGProductions &prods)
         dout << "FIRST(" << sym << ") = ";
         CFG::emitAllMembers(const_cast<Symbol &>(sym).firsts(), false);
     }
+}
+
+/* ////////////////////////////////////////////////////////////////////////// */
+static set<Symbol>
+getAlphaUBeta(const vector<Symbol> &in)
+{
+    vector<Symbol> cin = in;
+    set<Symbol> aub;
+    vector<Symbol>::iterator s = cin.begin();
+
+    /* alpha's firsts are always going to be in the set */
+    aub.insert(s->firsts().begin(), s->firsts().end());
+    advance(s, 1);
+    /* now figure out FIRST(beta) */
+    while (cin.end() != s) {
+        aub.insert(s->firsts().begin(), s->firsts().end());
+        if (!s->nullable()) break;
+        else ++s;
+    }
+    return aub;
 }
 
 /* ////////////////////////////////////////////////////////////////////////// */
@@ -620,30 +640,24 @@ CFG::computeFirstSets(void)
         for (CFGProduction &p : this->productions) {
             nelems = p.lhs().firsts().size();
             Symbol alpha = *p.rhs().begin();
-            /* if alpha is nullable */
-            /* XXX FIX */
-            if (alpha.nullable()) {
-                /* need FIRST(alpha) U FIRST(beta) */
-                for (Symbol &sym : p.rhs()) {
-                    p.lhs().firsts().insert(sym.firsts().begin(),
-                                            sym.firsts().end());
-                }
-            }
-            /* else alpha is not nullable, so FIRST(alpha) is all we need */
-            else {
+            if (alpha.terminal() || !alpha.nullable()) {
                 p.lhs().firsts().insert(alpha.firsts().begin(),
                                         alpha.firsts().end());
+            }
+            else {
+                set<Symbol> aub = getAlphaUBeta(p.rhs());
+                p.lhs().firsts().insert(aub.begin(), aub.end());
             }
             CFG::propagateFirsts(this->productions,
                                  p.lhs().sym(),
                                  p.lhs().firsts());
-            hadUpdate = (nelems != p.lhs().firsts().size());
+            if (nelems != p.lhs().firsts().size()) hadUpdate = true;
         }
     } while (hadUpdate);
 
     if (this->verbose) {
         dout << __func__ << ": here are the first sets:" << endl;
-        emitFirstSet(this->productions);
+        emitFirstSets(this->productions);
         dout << __func__ << ": fixed-point end ***" << endl;
         dout << endl;
     }
