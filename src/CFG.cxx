@@ -38,9 +38,9 @@ const string Symbol::DEAD = "_0xDEADBEEF_";
  * character will need to be changed. */
 const string Symbol::EPSILON = " ";
 /* our parser doesn't allow multi-char string, so this is okay */
-const string Symbol::START = "S'";
+const string Symbol::START   = "S'";
 /* our scanner doesn't accept $s, so this is okay */
-const string Symbol::END = "$";
+const string Symbol::END     = "$";
 
 /* ////////////////////////////////////////////////////////////////////////// */
 bool
@@ -174,7 +174,7 @@ void
 NonGeneratingEraser::erase(CFGProductions &productions) const
 {
     if (this->verbose) {
-        dout << __func__ << ": removing non-generating symbols..." << endl;
+        dout << "removing non-generating symbols..." << endl;
     }
     for (auto p = productions.begin(); productions.end() != p;) {
         if (!p->lhs().marked() || !p->rhsMarked()) {
@@ -190,7 +190,7 @@ void
 UnreachableEraser::erase(CFGProductions &productions) const
 {
     if (this->verbose) {
-        dout << __func__ << ": removing unreachable symbols..." << endl;
+        dout << "removing unreachable symbols..." << endl;
     }
     for (auto p = productions.begin(); productions.end() != p;) {
         if (!p->lhs().marked()) {
@@ -210,10 +210,6 @@ UnreachableHygiene::go(CFGProductions &productions) const
         hadUpdate = false;
         for (CFGProduction &p : productions) {
             if (p.lhs().marked() && !p.rhsMarked()) {
-                if (this->verbose) {
-                    dout << "  marking: ";
-                    CFG::emitAllMembers(p.rhs(), false);
-                }
                 for (Symbol &sym : p.rhs()) {
                     CFG::markAllSymbols(productions, sym.sym());
                 }
@@ -232,9 +228,6 @@ NonGeneratingHygiene::go(CFGProductions &productions) const
         hadUpdate = false;
         for (CFGProduction &p : productions) {
             if (!p.lhs().marked() && p.rhsMarked()) {
-                if (this->verbose) {
-                    dout << "  marking " << p.lhs() << endl;
-                }
                 /* make sure that we update all instances of lhs()->sym() */
                 CFG::markAllSymbols(productions, p.lhs().sym());
                 hadUpdate = true;
@@ -322,15 +315,16 @@ CFG::emitState(void) const
     dout << "non-terminals begin" << endl;
     CFG::emitAllMembers(this->getNonTerminals());
     dout << "non-terminals end" << endl;
+    dout << endl;
 
     dout << "terminals begin" << endl;
     CFG::emitAllMembers(this->getTerminals());
     dout << "terminals end" << endl;
+    dout << endl;
 
     dout << "productions begin" << endl;
     CFG::emitAllMembers(this->productions);
     dout << "productions end" << endl;
-
     dout << endl;
 }
 
