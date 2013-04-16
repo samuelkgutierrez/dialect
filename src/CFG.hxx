@@ -42,6 +42,8 @@ private:
     bool start;
     /* flag indicating whether or not this symbol is epsilon */
     bool epsilon;
+    /* flag indicating whether or not this symbol is nullable */
+    bool _nullable;
     /* first set for symbol */
     std::set<Symbol> firstSet;
     /* follow set for symbol */
@@ -61,7 +63,8 @@ public:
                    symbol(Symbol::DEAD),
                    terminal(false),
                    start(false),
-                   epsilon(false) { ; }
+                   epsilon(false),
+                   _nullable(false) { ; }
 
     Symbol(const std::string &sym,
            bool marked = false,
@@ -70,7 +73,8 @@ public:
                                    symbol(sym),
                                    terminal(isTerminal),
                                    start(isStart),
-                                   epsilon(Symbol::EPSILON == symbol) { ; }
+                                   epsilon(Symbol::EPSILON == symbol),
+                                   _nullable(Symbol::EPSILON == symbol) { ; }
 
     ~Symbol(void) { ; }
 
@@ -88,7 +92,9 @@ public:
 
     bool isStart(void) const { return this->start; }
 
-    bool isEpsilon(void) const { return Symbol::EPSILON == this->symbol; }
+    bool isEpsilon(void) const { return this->epsilon; }
+
+    bool nullable(void) const { return this->_nullable; }
 
     std::set<Symbol> &firsts(void) { return this->firstSet; }
 
@@ -217,22 +223,14 @@ class CFG {
 private:
     /* flag indicating whether or not to emit debug output to stdout */
     bool verbose;
-    /* the start of the CFG */
-    Symbol startSymbol;
-    /* list of ALL productions discovered during parse */
+    /* grammar productions */
     CFGProductions productions;
-    /* list of productions after grammar hygiene */
-    CFGProductions cleanProductions;
-    /* list of terminals in the grammar */
-    std::set<Symbol> terminals;
-    /* list of non-terminals in the grammar */
-    std::set<Symbol> nonTerminals;
     /* nullable set */
     std::set<Symbol> nullableSet;
     /* compute nullable set */
     void computeNullable(void);
     /* first step when computing first sets */
-    void initFirstSets(void);
+    void refreshFirstSets(void);
     /* compute first sets */
     void computeFirstSets(void);
     /* compute follow sets */
@@ -240,17 +238,17 @@ private:
     /* performs prep work for parse table creation */
     void parseTablePrep(void);
 
+    void followsetPrep(void);
+
     static void propagateFirsts(CFGProductions &productions,
                                 const Symbol &symbol,
                                 const std::set<Symbol> &firstSet);
 
     void propagateFollows(CFGProductions &productions,
-                          const std::vector<Symbol> &what);
-
-    void followSetPrep(void);
+                          const Symbol &s);
 
 public:
-    CFG(void);
+    CFG(void) { this->verbose = false; }
 
     CFG(const CFGProductions &productions);
 
@@ -259,6 +257,8 @@ public:
     std::set<Symbol> getNonTerminals(void) const;
 
     std::set<Symbol> getTerminals(void) const;
+
+    Symbol startSymbol(void) const;
 
     void beVerbose(bool v = true) { this->verbose = v; }
 
@@ -269,7 +269,8 @@ public:
     CFGProductions
     buildFullyPopulatedGrammar(const CFGProductions &prods) const;
     /* XXX move this to Base */
-    template <typename T> static void emitAllMembers(const T &t);
+    template <typename T> static void emitAllMembers(const T &t,
+                                                     bool nls = true);
     /* cleans old based on marker, eraser, and algo behavior */
     CFGProductions clean(const CFGProductionMarker &marker,
                          const CFGProductionEraser &eraser,
@@ -279,11 +280,7 @@ public:
     static void markAllSymbols(CFGProductions &productions,
                                const Symbol &symbol);
 
-    bool nullable(const Symbol &s) { return this->nullableSet.end() !=
-                                            this->nullableSet.find(s); }
-
     void clean(void);
-
 };
 
 #endif

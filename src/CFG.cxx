@@ -147,8 +147,7 @@ NullableMarker::mark(CFGProductions &productions) const
 {
     /* start by marking all epsilons */
     for (CFGProduction &p : productions) {
-        /* the lhs can't be a terminal, so it can't be epsilon */
-        p.lhs().mark(false);
+        p.lhs().mark(p.lhs().isEpsilon());
         for (Symbol &sym : p.rhs()) {
             sym.mark(sym.isEpsilon());
         }
@@ -178,9 +177,7 @@ NonGeneratingEraser::erase(CFGProductions &productions) const
     }
     for (auto p = productions.begin(); productions.end() != p;) {
         if (!p->lhs().marked() || !p->rhsMarked()) {
-            if (this->verbose) {
-                dout << "  rm " << *p << endl;
-            }
+            if (this->verbose) dout << "  rm " << *p << endl;
             p = productions.erase(p);
         }
         else ++p;
@@ -196,9 +193,7 @@ UnreachableEraser::erase(CFGProductions &productions) const
     }
     for (auto p = productions.begin(); productions.end() != p;) {
         if (!p->lhs().marked()) {
-            if (this->verbose) {
-                dout << "  rm " << *p << endl;
-            }
+            if (this->verbose) dout << "  rm " << *p << endl;
             p = productions.erase(p);
         }
         else ++p;
@@ -212,23 +207,17 @@ UnreachableHygiene::go(CFGProductions &productions) const
     bool hadUpdate;
     do {
         hadUpdate = false;
-        if (this->verbose) {
-            dout << __func__ << ": in main loop" << endl;
-        }
         for (CFGProduction &p : productions) {
             if (p.lhs().marked() && !p.rhsMarked()) {
                 if (this->verbose) {
-                    dout << "  marking " << endl;
-                    CFG::emitAllMembers(p.rhs());
+                    dout << "  marking: ";
+                    CFG::emitAllMembers(p.rhs(), false);
                 }
                 for (Symbol &sym : p.rhs()) {
                     CFG::markAllSymbols(productions, sym.sym());
                 }
                 hadUpdate = true;
             }
-        }
-        if (!hadUpdate) {
-            if (this->verbose) dout << "  done!" << endl;
         }
     } while (hadUpdate);
 }
@@ -240,9 +229,6 @@ NonGeneratingHygiene::go(CFGProductions &productions) const
     bool hadUpdate;
     do {
         hadUpdate = false;
-        if (this->verbose) {
-            dout << __func__ << ": in main loop" << endl;
-        }
         for (CFGProduction &p : productions) {
             if (!p.lhs().marked() && p.rhsMarked()) {
                 if (this->verbose) {
@@ -266,12 +252,6 @@ NonGeneratingHygiene::go(CFGProductions &productions) const
 /* ////////////////////////////////////////////////////////////////////////// */
 
 /* ////////////////////////////////////////////////////////////////////////// */
-CFG::CFG(void)
-{
-    this->verbose = false;
-}
-
-/* ////////////////////////////////////////////////////////////////////////// */
 CFG::CFG(const CFGProductions &productions)
 {
     this->verbose = false;
@@ -282,12 +262,6 @@ CFG::CFG(const CFGProductions &productions)
      * fully populated production vector that we can trust. this vector will
      * be built from the parsed CFG, so it may not be "clean." */
     this->productions = this->buildFullyPopulatedGrammar(productions);
-    /* get the start symbol */
-    CFGProduction firstProduction = *this->productions.begin();
-    this->startSymbol = firstProduction.lhs();
-    /* now capture some extra information for nice output */
-    this->nonTerminals = this->getNonTerminals();
-    this->terminals = this->getTerminals();
 }
 
 /* ////////////////////////////////////////////////////////////////////////// */
@@ -303,34 +277,20 @@ CFG::buildFullyPopulatedGrammar(const CFGProductions &productions) const
     CFGProduction firstProduction = *productions.begin();
     Symbol startSymbol = firstProduction.lhs();
 
-    /* add a new, special terminal, $ and new start production */
-    fpp.insert(fpp.begin(), CFGProduction(Symbol::START,
-                                          startSymbol.sym() + Symbol::END));
-
-    /* XXX probably not needed. once things work, reconsider this code */
-    //fpp.begin()->lhs().follows().insert(Symbol(Symbol::END));
-
-    startSymbol = Symbol(Symbol::START);
-
     /* first mark all non-terminals on the lhs and add to nonTerminals */
     for (CFGProduction &prod : fpp) {
         prod.lhs().setIsTerminal(false);
         nonTerminals.insert(prod.lhs());
-        if (startSymbol == prod.lhs()) prod.lhs().setIsStart(true);
+        prod.lhs().setIsStart(startSymbol == prod.lhs());
     }
     /* now that we know about all the non-terminals, finish setup by updating
      * the symbols on the right-hand side. */
     for (CFGProduction &prod : fpp) {
         /* iterate over all the symbols on the rhs */
         for (Symbol &sym : prod.rhs()) {
-            /* not in set of non-terminals, so must be a terminal */
-            if (nonTerminals.end() == nonTerminals.find(sym)) {
-                sym.setIsTerminal(true);
-            }
-            /* must be a non-terminal on the rhs */
-            else {
-                sym.setIsTerminal(false);
-            }
+            /* if not in set of non-terminals, so must be a terminal
+             * else must be a non-terminal on the rhs */
+            sym.setIsTerminal(nonTerminals.end() == nonTerminals.find(sym));
             if (startSymbol == sym) sym.setIsStart(true);
         }
     }
@@ -340,13 +300,31 @@ CFG::buildFullyPopulatedGrammar(const CFGProductions &productions) const
 /* ////////////////////////////////////////////////////////////////////////// */
 template <typename T>
 void
-CFG::emitAllMembers(const T &t)
+CFG::emitAllMembers(const T &t, bool nls)
 {
     typename T::const_iterator member;
 
-    for (member = t.begin(); t.end() != member; ++member) {
-        dout << "  " << *member << endl;
+    if (nls) {
+        for (member = t.begin(); t.end() != member; ++member) {
+            dout << "  " << *member << endl;
+        }
     }
+    else {
+        cout << "{";
+        for (member = t.begin(); t.end() != member; ++member) {
+            if (member != t.begin()) cout << ", ";
+            cout << *member;
+        }
+        cout << "}" << endl;
+    }
+}
+
+/* ////////////////////////////////////////////////////////////////////////// */
+Symbol
+CFG::startSymbol(void) const
+{
+    CFGProduction fp = *this->productions.begin();
+    return fp.lhs();
 }
 
 /* ////////////////////////////////////////////////////////////////////////// */
@@ -354,14 +332,14 @@ void
 CFG::emitState(void) const
 {
     dout << endl;
-    dout << "start symbol: " << this->startSymbol << endl;
+    dout << "start symbol: " << this->startSymbol() << endl;
 
     dout << "non-terminals begin" << endl;
-    CFG::emitAllMembers(this->nonTerminals);
+    CFG::emitAllMembers(this->getNonTerminals());
     dout << "non-terminals end" << endl;
 
     dout << "terminals begin" << endl;
-    CFG::emitAllMembers(this->terminals);
+    CFG::emitAllMembers(this->getTerminals());
     dout << "terminals end" << endl;
 
     dout << "productions begin" << endl;
@@ -414,18 +392,7 @@ CFG::markAllSymbols(CFGProductions &productions,
 }
 
 /* ////////////////////////////////////////////////////////////////////////// */
-static void
-markAllRHS(CFGProductions &productions,
-           const Symbol &symbol)
-{
-    for (CFGProduction &p : productions) {
-        for (Symbol &sym : p.rhs()) {
-            if (symbol == sym) sym.mark(true);
-        }
-    }
-}
-
-/* ////////////////////////////////////////////////////////////////////////// */
+/* XXX FIXME rm firstSet */
 void
 CFG::propagateFirsts(CFGProductions &productions,
                      const Symbol &symbol,
@@ -446,19 +413,17 @@ CFG::propagateFirsts(CFGProductions &productions,
 /* ////////////////////////////////////////////////////////////////////////// */
 void
 CFG::propagateFollows(CFGProductions &productions,
-                      const vector<Symbol> &what)
+                      const Symbol &s)
 {
     for (CFGProduction &p : productions) {
-        vector<Symbol>::const_iterator i;
-        if (what.end() != (i = find(what.begin(), what.end(), p.lhs()))) {
-            p.lhs().follows().insert(const_cast<Symbol &>(*i).follows().begin(),
-                                     const_cast<Symbol &>(*i).follows().end());
+        if (s == p.lhs()) {
+            p.lhs().follows().insert(const_cast<Symbol &>(s).follows().begin(),
+                                     const_cast<Symbol &>(s).follows().end());
         }
         for (Symbol &sym : p.rhs()) {
-            if (what.end() != (i = find(what.begin(), what.end(), sym))) {
-                sym.follows().insert(const_cast<Symbol &>(*i).follows().begin(),
-                                     const_cast<Symbol &>(*i).follows().end());
-
+            if (s == sym) {
+                sym.follows().insert(const_cast<Symbol &>(s).follows().begin(),
+                                     const_cast<Symbol &>(s).follows().end());
             }
         }
     }
@@ -516,8 +481,8 @@ CFG::clean(void)
      *     fi
      * done
      */
-    this->cleanProductions = this->clean(gMarker, gEraser,
-                                         gHygiene, this->productions);
+    this->productions = this->clean(gMarker, gEraser,
+                                    gHygiene, this->productions);
     /**
      * general algorithm for removing unreachable symbols
      * mark the start symbol
@@ -527,8 +492,8 @@ CFG::clean(void)
      *     fi
      * done
      */
-    this->cleanProductions = this->clean(rMarker, rEraser,
-                                         rHygiene, this->cleanProductions);
+    this->productions = this->clean(rMarker, rEraser,
+                                    rHygiene, this->productions);
 }
 
 /* ////////////////////////////////////////////////////////////////////////// */
@@ -552,7 +517,7 @@ CFG::parseTablePrep(void)
 void
 CFG::computeNullable(void)
 {
-    CFGProductions pCopy = this->cleanProductions;
+    //CFGProductions pCopy = this->productions;
     NullableMarker marker; marker.beVerbose(this->verbose);
     bool hadUpdate;
 
@@ -560,30 +525,30 @@ CFG::computeNullable(void)
         dout << __func__ << ": nullable fixed-point begin ***" << endl;
     }
     /* init symbol markers for nullable calculation */
-    marker.mark(pCopy);
+    marker.mark(this->productions);
     /* start the fixed-point calculation */
     do {
         hadUpdate = false;
-        if (this->verbose) {
-            dout << __func__ << ": in main loop" << endl;
-        }
-        for (CFGProduction &p : pCopy) {
+        for (CFGProduction &p : this->productions) {
             if (p.rhsMarked() && !p.lhs().marked()) {
-                if (this->verbose) {
-                    dout << "  marking " << p.lhs() << endl;
-                }
-                CFG::markAllSymbols(pCopy, p.lhs().sym());
+                CFG::markAllSymbols(this->productions, p.lhs().sym());
                 hadUpdate = true;
                 /* add this symbol to the nullable set */
+                /* XXX RM this */
                 this->nullableSet.insert(p.lhs().sym());
             }
         }
-        if (!hadUpdate) if (this->verbose) dout << "  done!" << endl;
     } while (hadUpdate);
 
     if (this->verbose) {
-        dout << __func__ << ": here are the nullable non-terminals:" << endl;
-        CFG::emitAllMembers(this->nullableSet);
+        if (0 != this->nullableSet.size()) {
+            dout << __func__ << ": here are the nullable non-terminals: ";
+            CFG::emitAllMembers(this->nullableSet, false);
+        }
+        else {
+            dout << __func__ << ": did not find nullable non-terminals!"
+                 << endl;
+        }
         dout << __func__ << ": nullable fixed-point end ***" << endl;
         dout << endl;
     }
@@ -591,19 +556,31 @@ CFG::computeNullable(void)
 
 /* ////////////////////////////////////////////////////////////////////////// */
 void
-CFG::initFirstSets(void)
+CFG::refreshFirstSets(void)
 {
-    for (CFGProduction &p : this->cleanProductions) {
-        p.lhs().mark(false);
+    for (CFGProduction &p : this->productions) {
         for (Symbol &sym : p.rhs()) {
-            if (sym.isTerminal()) {
-                /* mark all terminals */
-                sym.mark(true);
-                /* add myself to my firsts if not epsilon 8-| */
-                if (!sym.isEpsilon()) sym.firsts().insert(sym);
+            /* add myself to my firsts if not epsilon 8-| */
+            if (sym.isTerminal() && !sym.isEpsilon()) {
+                sym.firsts().insert(sym);
             }
-            else sym.mark(false);
         }
+    }
+}
+
+/* ////////////////////////////////////////////////////////////////////////// */
+static void
+emitFirstSet(const CFGProductions &prods)
+{
+    set<Symbol> lhsSet;
+    for (const CFGProduction &p : prods) {
+        lhsSet.insert(const_cast<CFGProduction &>(p).lhs());
+        auto rhs = const_cast<CFGProduction &>(p).rhs();
+        lhsSet.insert(rhs.begin(), rhs.end());
+    }
+    for (const Symbol &sym : lhsSet) {
+        dout << "FIRST(" << sym << ") = ";
+        CFG::emitAllMembers(const_cast<Symbol &>(sym).firsts(), false);
     }
 }
 
@@ -611,171 +588,133 @@ CFG::initFirstSets(void)
 void
 CFG::computeFirstSets(void)
 {
+    size_t nelems = 0;
     bool hadUpdate;
 
     if (this->verbose) dout << __func__ << ": fixed-point begin ***" << endl;
 
-    this->initFirstSets();
+    this->refreshFirstSets();
     /* start the fixed-point calculation */
     do {
         hadUpdate = false;
-        if (this->verbose) dout << __func__ << ": in main loop" << endl;
-
-        for (CFGProduction &p : this->cleanProductions) {
-            if (!p.lhs().marked()) {
-                Symbol alpha = *p.rhs().begin();
-                /* this must mean that the rhs hasn't been updated yet for this
-                 * particular production. so, just continue. */
-                if (0 == alpha.firsts().size() && !alpha.isTerminal()) {
-                    hadUpdate = true;
-                    continue;
+        for (CFGProduction &p : this->productions) {
+            nelems = p.lhs().firsts().size();
+            Symbol alpha = *p.rhs().begin();
+            /* if alpha is nullable */
+            /* XXX FIX */
+            if (alpha.nullable()) {
+                /* need FIRST(alpha) U FIRST(beta) */
+                for (Symbol &sym : p.rhs()) {
+                    p.lhs().firsts().insert(sym.firsts().begin(),
+                                            sym.firsts().end());
                 }
-                /* if alpha is nullable */
-                if (this->nullableSet.end() != this->nullableSet.find(alpha)) {
-                    /* need FIRST(alpha) U FIRST(beta) */
-                    for (Symbol &sym : p.rhs()) {
-                        p.lhs().firsts().insert(sym.firsts().begin(),
-                                                sym.firsts().end());
-                    }
-                }
-                /* else alpha is not nullable, so FIRST(alpha) is all we need */
-                else {
-                    p.lhs().firsts().insert(alpha.firsts().begin(),
-                                            alpha.firsts().end());
-                }
-                if (this->verbose) dout << "  marking " << p.lhs() << endl;
-                p.lhs().mark(true);
-                CFG::propagateFirsts(this->cleanProductions,
-                                     p.lhs().sym(),
-                                     p.lhs().firsts());
-                markAllRHS(this->cleanProductions, p.lhs().sym());
-                hadUpdate = true;
             }
+            /* else alpha is not nullable, so FIRST(alpha) is all we need */
+            else {
+                p.lhs().firsts().insert(alpha.firsts().begin(),
+                                        alpha.firsts().end());
+            }
+            CFG::propagateFirsts(this->productions,
+                                 p.lhs().sym(),
+                                 p.lhs().firsts());
+            hadUpdate = (nelems != p.lhs().firsts().size());
         }
-        if (!hadUpdate) if (this->verbose) dout << "  done!" << endl;
     } while (hadUpdate);
 
     if (this->verbose) {
         dout << __func__ << ": here are the first sets:" << endl;
-        set<Symbol> lhsSet;
-        for (const CFGProduction &p : this->cleanProductions) {
-            lhsSet.insert(const_cast<CFGProduction &>(p).lhs());
-            vector<Symbol> rhs = const_cast<CFGProduction &>(p).rhs();
-            lhsSet.insert(rhs.begin(), rhs.end());
-        }
-        for (const Symbol &sym : lhsSet) {
-            dout << sym << " begin" << endl;
-            CFG::emitAllMembers(const_cast<Symbol &>(sym).firsts());
-            dout << sym << " end" << endl;
-        }
+        emitFirstSet(this->productions);
         dout << __func__ << ": fixed-point end ***" << endl;
         dout << endl;
     }
 }
 
 /* ////////////////////////////////////////////////////////////////////////// */
-void
-CFG::followSetPrep(void)
+static bool
+lastElem(const vector<Symbol> &l, vector<Symbol>::iterator i)
 {
+    bool res = false;
+
+    advance(i, 1);
+    res = (l.end() == i);
+    advance(i, -1);
+    return res;
+}
+
+/* ////////////////////////////////////////////////////////////////////////// */
+void
+CFG::followsetPrep(void)
+{
+    /* add a new, special terminal, $ and new start production */
+    CFGProduction newp(Symbol::START, this->startSymbol().sym() + Symbol::END);
+    this->productions.insert(this->productions.begin(), newp);
+    /* init S''s follow set to include $ */
+    this->productions.begin()->lhs().follows().insert(Symbol(Symbol::END));
+    /* refresh productions */
+    this->productions = this->buildFullyPopulatedGrammar(this->productions);
+    this->refreshFirstSets();
 }
 
 /* ////////////////////////////////////////////////////////////////////////// */
 void
 CFG::computeFollowSets(void)
 {
-    bool hadUpdate;
+    size_t nelems = 0;
+    bool hadUpdate = false;
     FollowSetMarker marker;
 
     if (this->verbose) dout << __func__ << ": begin ***" << endl;
 
-    /* reset markers before we start calculating follow sets */
-    marker.mark(this->cleanProductions);
+    this->followsetPrep();
 
+    /* reset markers before we start calculating follow sets */
+    marker.mark(this->productions);
 
     do {
-        if (this->verbose) dout << __func__ << ": in main loop" << endl;
         hadUpdate = false;
-        vector<Symbol> updates;
-        vector<Symbol>::iterator update;
-        for (CFGProduction &p : this->cleanProductions) {
-            auto sym = p.rhs().begin();
-            while (sym != p.rhs().end()) {
-                if (!sym->isTerminal()) {
-                    Symbol rneighbor;
-                    /* safe because we know that sym != rhs().end() */
-                    advance(sym, 1);
-                    if (p.rhs().end() == sym) {
-                        advance(sym, -1);
-                        size_t asdf = sym->follows().size();
-                        sym->follows().insert(p.lhs().follows().begin(),
-                                              p.lhs().follows().end());
-                        if (asdf != sym->follows().size()) {
-                            hadUpdate = true;
-                        }
-                        /* XXX ugly, change later */
-                        /* XXX also, add update flag code. */ 
-                        if (updates.end() == (update = find(updates.begin(),
-                                                            updates.end(),
-                                                            *sym))) {
-                            updates.push_back(*sym);
-                        }
-                        /* sym is already in the updates vector, so just add to
-                         * the follow set. */
-                        else {
-                            update->follows().insert(sym->follows().begin(),
-                                                     sym->follows().end());
-                        }
-                        advance(sym, 1);
-                        continue;
+        for (CFGProduction &p : this->productions) {
+            auto rhss = p.rhs().begin();
+            while (p.rhs().end() != rhss) {
+                if (!rhss->isTerminal()) {
+                    nelems = rhss->follows().size();
+                    /* for the case where beta is empty */
+                    if (lastElem(p.rhs(), rhss)) {
+                        rhss->follows().insert(p.lhs().follows().begin(),
+                                               p.lhs().follows().end());
                     }
-                    rneighbor = *sym;
-                    advance(sym, -1);
-                    size_t numelems = sym->follows().size();
-                    sym->follows().insert(rneighbor.firsts().begin(),
-                                          rneighbor.firsts().end());
-                    if (sym->follows().size() != numelems) {
-                        hadUpdate = true;
-                    }
-                    if (this->nullable(rneighbor)) {
-                        numelems = sym->follows().size();
-                        sym->follows().insert(p.lhs().follows().begin(),
-                                              p.lhs().follows().end());
-                        if (sym->follows().size() != numelems) {
-                            hadUpdate = true;
-                        }
-                    }
-                    if (updates.end() == (update = find(updates.begin(),
-                                                        updates.end(),
-                                                        *sym))) {
-                        updates.push_back(*sym);
-                    }
-                    /* sym is already in the updates vector, so just add to
-                     * the follow set. */
                     else {
-                        update->follows().insert(sym->follows().begin(),
-                                                 sym->follows().end());
+                        /* safe because rhss not last element */
+                        Symbol rn;
+                        advance(rhss, 1);
+                        rn = *rhss;
+                        advance(rhss, -1);
+                        rhss->follows().insert(rn.firsts().begin(),
+                                               rn.firsts().end());
+                        /* XXX FIX */
+                        if (rn.nullable()) {
+                            rhss->follows().insert(p.lhs().follows().begin(),
+                                                   p.lhs().follows().end());
+                        }
                     }
+                    hadUpdate = (nelems != rhss->follows().size());
+                    CFG::propagateFollows(this->productions, *rhss);
                 }
-                ++sym;
+                ++rhss;
             }
-            if (this->verbose) dout << "  marking " << p.lhs() << endl;
-            p.lhs().mark(true);
-            CFG::propagateFollows(this->cleanProductions, updates);
         }
-        if (!hadUpdate) if (this->verbose) dout << "  done!" << endl;
     } while (hadUpdate);
+
     if (this->verbose) {
         dout << __func__ << ": here are the follow sets:" << endl;
         set<Symbol> lhsSet;
-        for (const CFGProduction &p : this->cleanProductions) {
+        for (const CFGProduction &p : this->productions) {
             lhsSet.insert(const_cast<CFGProduction &>(p).lhs());
             vector<Symbol> rhs = const_cast<CFGProduction &>(p).rhs();
             lhsSet.insert(rhs.begin(), rhs.end());
         }
         for (const Symbol &sym : lhsSet) {
-            dout << sym << " begin" << endl;
-            CFG::emitAllMembers(const_cast<Symbol &>(sym).follows());
-            dout << sym << " end" << endl;
+            dout << "FOLLOW(" << sym << ") = ";
+            CFG::emitAllMembers(const_cast<Symbol &>(sym).follows(), false);
         }
         dout << __func__ << ": end ***" << endl;
         dout << endl;
