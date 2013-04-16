@@ -262,12 +262,12 @@ CFG::CFG(const CFGProductions &productions)
      * so, first take the incomplete productions vector and generate a new,
      * fully populated production vector that we can trust. this vector will
      * be built from the parsed CFG, so it may not be "clean." */
-    this->productions = this->buildFullyPopulatedGrammar(productions);
+    this->productions = CFG::refresh(productions);
 }
 
 /* ////////////////////////////////////////////////////////////////////////// */
 CFGProductions
-CFG::buildFullyPopulatedGrammar(const CFGProductions &productions) const
+CFG::refresh(const CFGProductions &productions)
 {
     /* fully populated productions */
     CFGProductions fpp = productions;
@@ -652,7 +652,7 @@ CFG::followsetPrep(void)
     /* init S''s follow set to include $ */
     this->productions.begin()->lhs().follows().insert(Symbol(Symbol::END));
     /* refresh productions */
-    this->productions = this->buildFullyPopulatedGrammar(this->productions);
+    this->productions = CFG::refresh(this->productions);
     this->refreshFirstSets();
 }
 

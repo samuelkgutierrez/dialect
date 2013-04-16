@@ -266,8 +266,8 @@ public:
 
     void createParseTable(void);
 
-    CFGProductions
-    buildFullyPopulatedGrammar(const CFGProductions &prods) const;
+    static CFGProductions
+    refresh(const CFGProductions &prods);
     /* XXX move this to Base */
     template <typename T> static void emitAllMembers(const T &t,
                                                      bool nls = true);
