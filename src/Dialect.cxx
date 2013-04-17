@@ -27,6 +27,7 @@
 #include "Constants.hxx"
 #include "DialectException.hxx"
 #include "CFG.hxx"
+#include "LL1Parser.hxx"
 #include "CFGParser.h"
 
 extern int parserParse(FILE *fp);
@@ -110,8 +111,12 @@ main(int argc, char **argv)
         }
         /* perform grammar hygiene */
         contextFreeGrammar->clean();
-        /* create parse table */
-        contextFreeGrammar->createParseTable();
+        /* prep grammar so that it can be fed to a parse table */
+        contextFreeGrammar->crunch();
+        /* init ll1 parser */
+        LL1Parser ll1(*contextFreeGrammar);
+        /* try to parse -- catch any funk */
+        ll1.parse();
         /* done! */
         delete contextFreeGrammar;
     }
@@ -119,6 +124,5 @@ main(int argc, char **argv)
         cerr << e.what() << endl;
         return EXIT_FAILURE;
     }
-
     return EXIT_SUCCESS;
 }

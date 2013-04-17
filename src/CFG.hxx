@@ -101,7 +101,6 @@ public:
     std::set<Symbol> &firsts(void) { return this->firstSet; }
 
     std::set<Symbol> &follows(void) { return this->followSet; }
-
     /* == */
     friend bool operator==(const Symbol &s1,
                            const Symbol &s2);
@@ -235,15 +234,12 @@ private:
     void refreshFirstSets(void);
     /* compute first sets */
     void computeFirstSets(void);
+    /* performs prep work for computeFollowSets */
+    void followsetPrep(void);
     /* compute follow sets */
     void computeFollowSets(void);
     /* performs prep work for parse table creation */
     void parseTablePrep(void);
-
-    void followsetPrep(void);
-
-    void propagateFollows(CFGProductions &productions,
-                          const Symbol &s);
 
 public:
     CFG(void) { this->verbose = false; }
@@ -262,13 +258,10 @@ public:
 
     void emitState(void) const;
 
-    void createParseTable(void);
+    void crunch(void);
 
-    static CFGProductions
-    refresh(const CFGProductions &prods);
-    /* XXX move this to Base */
-    template <typename T> static void emitAllMembers(const T &t,
-                                                     bool nls = true);
+    static CFGProductions refresh(const CFGProductions &prods);
+
     /* cleans old based on marker, eraser, and algo behavior */
     CFGProductions clean(const CFGProductionMarker &marker,
                          const CFGProductionEraser &eraser,

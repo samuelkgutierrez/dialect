@@ -33,6 +33,45 @@ using namespace std;
 /* ////////////////////////////////////////////////////////////////////////// */
 
 /* ////////////////////////////////////////////////////////////////////////// */
+template <typename T>
+static void
+emitAllMembers(const T &t, bool nls = true)
+{
+    if (nls) {
+        for (auto member = t.begin(); t.end() != member; ++member) {
+            dout << "  " << *member << endl;
+        }
+    }
+    else {
+        cout << "{";
+        for (auto member = t.begin(); t.end() != member; ++member) {
+            if (member != t.begin()) cout << ", ";
+            cout << *member;
+        }
+        cout << "}" << endl;
+    }
+}
+
+/* ////////////////////////////////////////////////////////////////////////// */
+static void
+propagateFollows(CFGProductions &productions,
+                 const Symbol &s)
+{
+    Symbol t = s;
+
+    for (CFGProduction &p : productions) {
+        if (t == p.lhs()) {
+            p.lhs().follows().insert(t.follows().begin(), t.follows().end());
+        }
+        for (Symbol &sym : p.rhs()) {
+            if (t == sym) {
+                sym.follows().insert(t.follows().begin(), t.follows().end());
+            }
+        }
+    }
+}
+
+/* ////////////////////////////////////////////////////////////////////////// */
 static void
 propagateMark(CFGProductions &productions,
               const Symbol &symbol)
@@ -84,9 +123,7 @@ lastElem(const T &l)
     typename T::const_iterator i = l.begin();
     bool res = false;
 
-    advance(i, 1);
-    res = (l.end() == i);
-    advance(i, -1);
+    ++i; res = (l.end() == i); --i;
     return res;
 }
 
@@ -106,10 +143,26 @@ emitNullables(const CFGProductions &productions)
     }
     if (0 != nullables.size()) {
         dout << "here are the nullable non-terminals: ";
-        CFG::emitAllMembers(nullables, false);
+        emitAllMembers(nullables, false);
     }
     else {
         dout << "did not find nullable non-terminals!" << endl;
+    }
+}
+
+/* ////////////////////////////////////////////////////////////////////////// */
+static void
+emitFollowSets(const CFGProductions &productions)
+{
+    set<Symbol> lhsSet;
+    for (const CFGProduction &p : productions) {
+        lhsSet.insert(const_cast<CFGProduction &>(p).lhs());
+        vector<Symbol> rhs = const_cast<CFGProduction &>(p).rhs();
+        lhsSet.insert(rhs.begin(), rhs.end());
+    }
+    for (const Symbol &sym : lhsSet) {
+        dout << "FOLLOW(" << sym << ") = ";
+        emitAllMembers(const_cast<Symbol &>(sym).follows(), false);
     }
 }
 
@@ -119,7 +172,8 @@ emitNullables(const CFGProductions &productions)
 /* ////////////////////////////////////////////////////////////////////////// */
 /* ////////////////////////////////////////////////////////////////////////// */
 
-const string Symbol::DEAD = "_0xDEADBEEF_";
+/* dead symbol */
+const string Symbol::DEAD    = "_0xDEADBEEF_";
 /* this is okay because our parser makes sure that we can never get a space on
  * either side of any production rule. if this ever changes, then this "special"
  * character will need to be changed. */
@@ -355,26 +409,6 @@ CFG::refresh(void)
 }
 
 /* ////////////////////////////////////////////////////////////////////////// */
-template <typename T>
-void
-CFG::emitAllMembers(const T &t, bool nls)
-{
-    if (nls) {
-        for (auto member = t.begin(); t.end() != member; ++member) {
-            dout << "  " << *member << endl;
-        }
-    }
-    else {
-        cout << "{";
-        for (auto member = t.begin(); t.end() != member; ++member) {
-            if (member != t.begin()) cout << ", ";
-            cout << *member;
-        }
-        cout << "}" << endl;
-    }
-}
-
-/* ////////////////////////////////////////////////////////////////////////// */
 Symbol
 CFG::startSymbol(void) const
 {
@@ -390,17 +424,17 @@ CFG::emitState(void) const
     dout << "start symbol: " << this->startSymbol() << endl;
 
     dout << "non-terminals begin" << endl;
-    CFG::emitAllMembers(this->getNonTerminals());
+    emitAllMembers(this->getNonTerminals());
     dout << "non-terminals end" << endl;
     dout << endl;
 
     dout << "terminals begin" << endl;
-    CFG::emitAllMembers(this->getTerminals());
+    emitAllMembers(this->getTerminals());
     dout << "terminals end" << endl;
     dout << endl;
 
     dout << "productions begin" << endl;
-    CFG::emitAllMembers(this->productions);
+    emitAllMembers(this->productions);
     dout << "productions end" << endl;
     dout << endl;
 }
@@ -439,25 +473,6 @@ CFG::getTerminals(void) const
 }
 
 /* ////////////////////////////////////////////////////////////////////////// */
-void
-CFG::propagateFollows(CFGProductions &productions,
-                      const Symbol &s)
-{
-    Symbol t = s;
-
-    for (CFGProduction &p : productions) {
-        if (t == p.lhs()) {
-            p.lhs().follows().insert(t.follows().begin(), t.follows().end());
-        }
-        for (Symbol &sym : p.rhs()) {
-            if (t == sym) {
-                sym.follows().insert(t.follows().begin(), t.follows().end());
-            }
-        }
-    }
-}
-
-/* ////////////////////////////////////////////////////////////////////////// */
 CFGProductions
 CFG::clean(const CFGProductionMarker &marker,
            const CFGProductionEraser &eraser,
@@ -478,7 +493,7 @@ CFG::clean(const CFGProductionMarker &marker,
 
     if (this->verbose) {
         dout << __func__ << ": here is the new cfg:" << endl;
-        CFG::emitAllMembers(newProds);
+        emitAllMembers(newProds);
         dout << __func__ << ": grammar hygiene end ***" << endl;
         dout << endl;
     }
@@ -526,7 +541,7 @@ CFG::clean(void)
 
 /* ////////////////////////////////////////////////////////////////////////// */
 void
-CFG::createParseTable(void)
+CFG::crunch(void)
 {
     this->parseTablePrep();
 }
@@ -599,7 +614,7 @@ emitFirstSets(const CFGProductions &prods)
     }
     for (const Symbol &sym : lhsSet) {
         dout << "FIRST(" << sym << ") = ";
-        CFG::emitAllMembers(const_cast<Symbol &>(sym).firsts(), false);
+        emitAllMembers(const_cast<Symbol &>(sym).firsts(), false);
     }
 }
 
@@ -689,6 +704,7 @@ firstOfBeta(const vector<Symbol> &in)
 {
     vector<Symbol> cin = in;
     vector<Symbol>::iterator i = cin.begin();
+    /* first of beta set */
     set<Symbol> fob;
 
     /* now figure out FIRST(beta) */
@@ -701,63 +717,59 @@ firstOfBeta(const vector<Symbol> &in)
 }
 
 /* ////////////////////////////////////////////////////////////////////////// */
-void
-CFG::computeFollowSets(void)
+static bool
+followFPO(CFGProductions &productions)
 {
     size_t nelems = 0;
     bool hadUpdate = false;
 
+    for (CFGProduction &p : productions) {
+        auto rhss = p.rhs().begin();
+        while (p.rhs().end() != rhss) {
+            if (!rhss->terminal()) {
+                nelems = rhss->follows().size();
+                /* for the case where beta is empty */
+                vector<Symbol> slice(rhss, p.rhs().end());
+                if (lastElem(slice)) {
+                    rhss->follows().insert(p.lhs().follows().begin(),
+                                           p.lhs().follows().end());
+                }
+                else {
+                    /* safe because rhss not last element */
+                    ++rhss;
+                    vector<Symbol> slice(rhss, p.rhs().end());
+                    auto fob = firstOfBeta(slice);
+                    if (nullableFromHere(p.rhs(), rhss)) {
+                        --rhss;
+                        rhss->follows().insert(p.lhs().follows().begin(),
+                                               p.lhs().follows().end());
+                        ++rhss;
+                    }
+                    --rhss;
+                    rhss->follows().insert(fob.begin(), fob.end());
+                }
+                if (nelems != rhss->follows().size()) hadUpdate = true;
+                propagateFollows(productions, *rhss);
+            }
+            ++rhss;
+        }
+    }
+    return hadUpdate;
+}
+
+/* ////////////////////////////////////////////////////////////////////////// */
+void
+CFG::computeFollowSets(void)
+{
     if (this->verbose) dout << __func__ << ": begin ***" << endl;
 
     this->followsetPrep();
-
-    do {
-        hadUpdate = false;
-        for (CFGProduction &p : this->productions) {
-            auto rhss = p.rhs().begin();
-            while (p.rhs().end() != rhss) {
-                if (!rhss->terminal()) {
-                    nelems = rhss->follows().size();
-                    /* for the case where beta is empty */
-                    vector<Symbol> slice(rhss, p.rhs().end());
-                    if (lastElem(slice)) {
-                        rhss->follows().insert(p.lhs().follows().begin(),
-                                               p.lhs().follows().end());
-                    }
-                    else {
-                        /* safe because rhss not last element */
-                        ++rhss;
-                        vector<Symbol> slice(rhss, p.rhs().end());
-                        set<Symbol> fob = firstOfBeta(slice);
-                        if (nullableFromHere(p.rhs(), rhss)) {
-                            --rhss;
-                            rhss->follows().insert(p.lhs().follows().begin(),
-                                                   p.lhs().follows().end());
-                            ++rhss;
-                        }
-                        --rhss;
-                        rhss->follows().insert(fob.begin(), fob.end());
-                    }
-                    if (nelems != rhss->follows().size()) hadUpdate = true;
-                    CFG::propagateFollows(this->productions, *rhss);
-                }
-                ++rhss;
-            }
-        }
-    } while (hadUpdate);
+    /* run the fixed-point algorithm until there are no changes */
+    while (followFPO(this->productions));
 
     if (this->verbose) {
         dout << __func__ << ": here are the follow sets:" << endl;
-        set<Symbol> lhsSet;
-        for (const CFGProduction &p : this->productions) {
-            lhsSet.insert(const_cast<CFGProduction &>(p).lhs());
-            vector<Symbol> rhs = const_cast<CFGProduction &>(p).rhs();
-            lhsSet.insert(rhs.begin(), rhs.end());
-        }
-        for (const Symbol &sym : lhsSet) {
-            dout << "FOLLOW(" << sym << ") = ";
-            CFG::emitAllMembers(const_cast<Symbol &>(sym).follows(), false);
-        }
+        emitFollowSets(this->productions);
         dout << __func__ << ": end ***" << endl;
         dout << endl;
     }
