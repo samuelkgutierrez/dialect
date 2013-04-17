@@ -473,31 +473,27 @@ CFG::getTerminals(void) const
 }
 
 /* ////////////////////////////////////////////////////////////////////////// */
-CFGProductions
+void
 CFG::clean(const CFGProductionMarker &marker,
            const CFGProductionEraser &eraser,
-           const CFGProductionHygieneAlgo &algo,
-           const CFGProductions &old) const
+           const CFGProductionHygieneAlgo &algo)
 {
-    CFGProductions newProds = old;
-
     if (this->verbose) {
         dout << __func__ << ": grammar hygiene begin ***" << endl;
     }
     /* start by marking all symbols */
-    marker.mark(newProds);
+    marker.mark(this->productions);
     /* run the hygiene algo */
-    algo.go(newProds);
+    algo.go(this->productions);
     /* erase unproductive productions */
-    eraser.erase(newProds);
+    eraser.erase(this->productions);
 
     if (this->verbose) {
         dout << __func__ << ": here is the new cfg:" << endl;
-        emitAllMembers(newProds);
+        emitAllMembers(this->productions);
         dout << __func__ << ": grammar hygiene end ***" << endl;
         dout << endl;
     }
-    return newProds;
 }
 
 /* ////////////////////////////////////////////////////////////////////////// */
@@ -524,8 +520,7 @@ CFG::clean(void)
      *     fi
      * done
      */
-    this->productions = this->clean(gMarker, gEraser,
-                                    gHygiene, this->productions);
+    this->clean(gMarker, gEraser, gHygiene);
     /**
      * general algorithm for removing unreachable symbols
      * mark the start symbol
@@ -535,8 +530,7 @@ CFG::clean(void)
      *     fi
      * done
      */
-    this->productions = this->clean(rMarker, rEraser,
-                                    rHygiene, this->productions);
+    this->clean(rMarker, rEraser, rHygiene);
 }
 
 /* ////////////////////////////////////////////////////////////////////////// */

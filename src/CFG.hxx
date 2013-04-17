@@ -262,11 +262,10 @@ public:
 
     static CFGProductions refresh(const CFGProductions &prods);
 
-    /* cleans old based on marker, eraser, and algo behavior */
-    CFGProductions clean(const CFGProductionMarker &marker,
-                         const CFGProductionEraser &eraser,
-                         const CFGProductionHygieneAlgo &algo,
-                         const CFGProductions &old) const;
+    /* cleans cfg based on marker, eraser, and algo behavior */
+    void clean(const CFGProductionMarker &marker,
+               const CFGProductionEraser &eraser,
+               const CFGProductionHygieneAlgo &algo);
 
     void clean(void);
 };
