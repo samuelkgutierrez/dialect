@@ -158,7 +158,8 @@ StrongLL1Parser::parse(void)
 static void
 emitParseState(const Symbol &in, const Symbol &tos, const CFGProduction &p)
 {
-    cout << "... in: " << in << " top: " << tos << " action: ";
+    cout << "..." << (Symbol::DEAD == in ? "" : " in: " + in.sym())
+         << " top: " << tos << " action: ";
     for (const Symbol &s : p.crhs()) { cout << s; }
     cout << endl;
 }
@@ -183,18 +184,23 @@ StrongLL1Parser::parseImpl(void)
 
     stk.push(this->_cfg.startSymbol());
 
-    while (!stk.empty() && !input.empty()) {
+    while (!stk.empty()) {
         Symbol top = stk.top();
-        Symbol in = *input.begin();
+        Symbol in;
+        if (!input.empty()) {
+            in = *input.begin();
+        }
         CFGProduction cp = pt[top][in];
         if (top.terminal()) {
             stk.pop();
             cout << "+++ match: " << top << endl;
             if (top.epsilon()) continue;
-            if (!(top == in)) stopParse();
-            input.erase(input.begin());
+            if (!input.empty()) {
+               if (top != in) stopParse();
+               input.erase(input.begin());
+            }
         }
-        else if (Symbol::DEAD == cp.lhs().sym()) {
+        else if (!input.empty() && Symbol::DEAD == cp.lhs().sym()) {
             stopParse();
         }
         else {
@@ -206,7 +212,7 @@ StrongLL1Parser::parseImpl(void)
         }
     }
     cout << "--- done with table-driven parse" << endl;
-    if (stk.size() == 1 && Symbol::END == stk.top().sym() && input.empty()) {
+    if (stk.size() == 0 && input.empty()) {
         cout << "*** success: input recognized by grammar ***" << endl;
     }
     else {

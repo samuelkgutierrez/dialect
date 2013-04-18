@@ -104,6 +104,9 @@ public:
     /* == */
     friend bool operator==(const Symbol &s1,
                            const Symbol &s2);
+    /* != */
+    friend bool operator!=(const Symbol &s1,
+                           const Symbol &s2);
     /* < */
     friend bool operator<(const Symbol &s1,
                           const Symbol &s2);

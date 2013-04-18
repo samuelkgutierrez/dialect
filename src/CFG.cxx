@@ -192,6 +192,14 @@ operator==(const Symbol &s1,
 }
 
 /* ////////////////////////////////////////////////////////////////////////// */
+bool
+operator!=(const Symbol &s1,
+           const Symbol &s2)
+{
+    return s1.symbol != s2.symbol;
+}
+
+/* ////////////////////////////////////////////////////////////////////////// */
 /* < */
 bool
 operator<(const Symbol &s1,
