@@ -139,8 +139,8 @@ LL1Parser::parse(void)
         sll1.parse();
     }
     catch (DialectException &e) {
+        /* both approaches failed */
         cerr << e.what() << endl;
-        /* now try a different approach */
     }
 }
 
@@ -148,8 +148,16 @@ LL1Parser::parse(void)
 void
 StrongLL1Parser::parse(void)
 {
-    this->initTable();
-    this->parseImpl();
+    /* first try strong */
+    try {
+        this->initTable();
+        this->parseImpl(true);
+    }
+    catch (DialectException &e) {
+        /* then try full */
+        cerr << e.what() << endl;
+        this->parseImpl(false);
+    }
 }
 
 /* ////////////////////////////////////////////////////////////////////////// */
@@ -170,13 +178,13 @@ stopParse(void)
 
 /* ////////////////////////////////////////////////////////////////////////// */
 void
-StrongLL1Parser::parseImpl(void)
+StrongLL1Parser::strongParse(void)
 {
     ParseTable &pt = this->_table;
     vector<Symbol> &input = this->_input;
     stack<Symbol> stk;
 
-    cout << endl << "--- starting table-driven parse" << endl;
+    cout << endl << "--- starting strong table-driven parse" << endl;
 
     stk.push(this->_cfg.startSymbol());
 
@@ -204,7 +212,7 @@ StrongLL1Parser::parseImpl(void)
             }
         }
     }
-    cout << "--- done with table-driven parse" << endl;
+    cout << "--- done with strong table-driven parse" << endl;
     if (stk.size() == 0 && input.empty()) {
         cout << "*** success: input recognized by grammar ***" << endl;
     }
@@ -225,4 +233,20 @@ dump:
         cout << "*** end state dump ***" << endl;
         stopParse();
     }
+}
+
+/* ////////////////////////////////////////////////////////////////////////// */
+void
+StrongLL1Parser::fullParse(void)
+{
+    cout << endl << "--- starting full table-driven parse" << endl;
+    cout << "--- done with full table-driven parse" << endl;
+}
+
+/* ////////////////////////////////////////////////////////////////////////// */
+void
+StrongLL1Parser::parseImpl(bool strong)
+{
+    if (strong) this->strongParse();
+    else this->fullParse();
 }

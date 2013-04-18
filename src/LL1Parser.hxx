@@ -57,7 +57,11 @@ private:
 
     void initTable(void);
 
-    void parseImpl(void);
+    void parseImpl(bool strong);
+
+    void strongParse(void);
+
+    void fullParse(void);
 
 public:
     StrongLL1Parser(void) : LL1Parser() { ; }
