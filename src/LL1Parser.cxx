@@ -30,8 +30,7 @@ using namespace std;
 
 /* ////////////////////////////////////////////////////////////////////////// */
 static bool
-aInFiOfA(CFGProduction &alpha,
-       const Symbol &a)
+aInFiOfA(CFGProduction &alpha, const Symbol &a)
 {
     /* first of alpha set */
     set<Symbol> foa;
@@ -49,8 +48,7 @@ aInFiOfA(CFGProduction &alpha,
 
 /* ////////////////////////////////////////////////////////////////////////// */
 static bool
-aInFoOfN(CFGProduction &N,
-         const Symbol &a)
+aInFoOfN(CFGProduction &N, const Symbol &a)
 {
     return (N.lhs().follows().end() != N.lhs().follows().find(a));
 }
@@ -181,7 +179,7 @@ void
 StrongLL1Parser::strongParse(void)
 {
     ParseTable &pt = this->_table;
-    vector<Symbol> &input = this->_input;
+    vector<Symbol> input = this->_input;
     stack<Symbol> stk;
 
     cout << endl << "--- starting strong table-driven parse" << endl;
@@ -236,11 +234,38 @@ dump:
 }
 
 /* ////////////////////////////////////////////////////////////////////////// */
+Symbol
+aInFiOfA(const CFGProduction &p,
+         const stack<Symbol> &in,
+         const Symbol &a)
+{
+    auto sc = in;
+    Symbol top;
+
+    cout << "P: " << p << endl;
+    for (auto s = p.crhs().rbegin(); s != p.crhs().rend(); ++s) {
+        cout << "PUSHING: " << *s << endl;
+        sc.push(*s);
+    }
+    while (!sc.empty()) {
+        top = sc.top();
+        if ((top.firsts().end() != top.firsts().find(a)) && !top.nullable()) {
+            return top;
+        }
+        else {
+            cout << a << " not in FIRST(" << top << ")" << endl;
+            sc.pop();
+        }
+    }
+    return a;
+}
+
+/* ////////////////////////////////////////////////////////////////////////// */
 void
 StrongLL1Parser::fullParse(void)
 {
     ParseTable &pt = this->_table;
-    vector<Symbol> &input = this->_input;
+    vector<Symbol> input = this->_input;
     stack<Symbol> stk;
 
     cout << endl << "--- starting full table-driven parse" << endl;
@@ -252,6 +277,9 @@ StrongLL1Parser::fullParse(void)
         Symbol in;
         if (!input.empty()) in = *input.begin();
         else in = Symbol(Symbol::END);
+        cout << "OLD TOP: " << top << endl;
+        top = aInFiOfA(pt[top][in], stk, in);
+        cout << "NEW TOP: " << top << endl;
         CFGProduction cp = pt[top][in];
         if (top.terminal()) {
             stk.pop();
