@@ -164,7 +164,7 @@ emitParseState(const Symbol &in, const Symbol &tos, const CFGProduction &p)
 static void
 stopParse(void)
 {
-    string estr = "*** STOP: input string not recognized by grammar ***";
+    string estr = "*** failure: input not recognized by grammar ***";
     throw DialectException(DIALECT_WHERE, estr, false);
 }
 
