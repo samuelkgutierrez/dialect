@@ -31,7 +31,8 @@ public:
 
     DialectException(std::string fileName,
                      int lineNo,
-                     const std::string &errMsg);
+                     const std::string &errMsg,
+                     bool where = true);
 
     virtual const char *what(void) const throw();
 };

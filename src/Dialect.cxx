@@ -29,6 +29,7 @@
 #include "CFG.hxx"
 #include "LL1Parser.hxx"
 #include "CFGParser.h"
+#include "UserInputParser.hxx"
 
 extern int parserParse(FILE *fp);
 /* can safely be used AFTER call to parseCFG */
@@ -81,7 +82,7 @@ parseCFG(string what)
 int
 main(int argc, char **argv)
 {
-    bool verboseMode = false;
+    bool verboseMode = true;
     string cfgDescription, fileToParse;
 
     if (3 != argc && 4 != argc) {
@@ -93,13 +94,13 @@ main(int argc, char **argv)
         fileToParse = string(argv[2]);
     }
     else {
-        if ("-v" != string(argv[1])) {
+        if ("-q" != string(argv[1])) {
             usage();
             return EXIT_FAILURE;
         }
         cfgDescription = string(argv[2]);
         fileToParse = string(argv[3]);
-        verboseMode = true;
+        verboseMode = false;
     }
     try {
         echoHeader();
@@ -113,8 +114,11 @@ main(int argc, char **argv)
         contextFreeGrammar->clean();
         /* prep grammar so that it can be fed to a parse table */
         contextFreeGrammar->crunch();
+        UserInputParser inputParser(fileToParse);
         /* init ll1 parser */
-        LL1Parser ll1(*contextFreeGrammar);
+        LL1Parser ll1(*contextFreeGrammar, inputParser.input());
+        /* set verbosity */
+        ll1.verbose(verboseMode);
         /* try to parse -- catch any funk */
         ll1.parse();
         /* done! */

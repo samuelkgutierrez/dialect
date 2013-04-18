@@ -15,32 +15,27 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "DialectException.hxx"
+#ifndef USER_INPUT_PARSER_INCLUDED
+#define USER_INPUT_PARSER_INCLUDED 
+
 #include "Base.hxx"
+#include "CFG.hxx"
 
 #include <string>
-#include <cstdio>
+#include <vector>
 
-using namespace std;
+class UserInputParser {
+private:
+    std::vector<Symbol> _input;
 
-/* ////////////////////////////////////////////////////////////////////////// */
-DialectException::DialectException(string fileName,
-                                   int lineNo,
-                                   const string &errMsg,
-                                   bool where)
-{
-    if (where) {
-        string lineNoStr = Base::int2string(lineNo);
-        whatString = "[" + fileName + " " + lineNoStr + "] " + errMsg;
-    }
-    else {
-        whatString = errMsg;
-    }
-}
+public:
+    UserInputParser(void) { ; }
 
-/* ////////////////////////////////////////////////////////////////////////// */
-const char *
-DialectException::what(void) const throw()
-{
-    return this->whatString.c_str();
-}
+    UserInputParser(const std::string &fileToParse);
+
+    ~UserInputParser(void) { ; }
+
+    std::vector<Symbol> input(void) const { return this->_input; }
+};
+
+#endif

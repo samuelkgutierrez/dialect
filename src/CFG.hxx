@@ -68,7 +68,7 @@ public:
 
     Symbol(const std::string &sym,
            bool marked = false,
-           bool terminal = false,
+           bool terminal = true,
            bool start = false) : marker(marked),
                                  symbol(sym),
                                  _terminal(terminal),
@@ -133,6 +133,8 @@ public:
     Symbol &lhs(void) { return this->leftHandSide; }
 
     std::vector<Symbol> &rhs(void) { return this->rightHandSide; }
+
+    std::vector<Symbol> crhs(void) const { return this->rightHandSide; }
 
     bool rhsMarked(void) const;
 
@@ -261,6 +263,8 @@ public:
     void crunch(void);
 
     static CFGProductions refresh(const CFGProductions &prods);
+
+    CFGProductions &prods(void) { return this->productions; }
 
     /* cleans cfg based on marker, eraser, and algo behavior */
     void clean(const CFGProductionMarker &marker,

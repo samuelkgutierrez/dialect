@@ -25,31 +25,50 @@
 #include "Base.hxx"
 #include "CFG.hxx"
 
+#include <vector>
+#include <map>
+
+typedef std::map<Symbol, std::map<Symbol, CFGProduction>> ParseTable;
+
 class LL1Parser {
 protected:
     bool _verbose;
     CFG _cfg;
+    std::vector<Symbol> _input;
 
 public:
     LL1Parser(void) { this->_verbose = false; }
 
     ~LL1Parser(void) { ; }
 
-    LL1Parser(const CFG &cfg) : _verbose(false),
-                                _cfg(cfg) { ; }
+    LL1Parser(const CFG &cfg,
+              const std::vector<Symbol> &input) : _verbose(false),
+                                                  _cfg(cfg),
+                                                  _input(input) { ; }
 
-    virtual void parse(void) const { ; }
+    virtual void parse(void);
+
+    void verbose(bool v = true) { this->_verbose = v; }
 };
 
 class StrongLL1Parser : public LL1Parser {
+private:
+    ParseTable _table;
+
+    void initTable(void);
+
+    void parseImpl(void);
+
 public:
     StrongLL1Parser(void) : LL1Parser() { ; }
 
     ~StrongLL1Parser(void) { ; }
 
-    StrongLL1Parser(const CFG &cfg) : LL1Parser(cfg) { ; }
+    StrongLL1Parser(const CFG &cfg,
+                    const std::vector<Symbol> &input) :
+        LL1Parser(cfg, input) { ; }
 
-    virtual void parse(void) const { ; }
+    virtual void parse(void);
 };
 
 #endif
