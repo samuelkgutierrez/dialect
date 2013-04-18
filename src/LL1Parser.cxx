@@ -72,9 +72,7 @@ emitTableEntry(const Symbol &nt,
                const Symbol &t,
                const CFGProduction &p)
 {
-    dout << "[" << nt << "]" << "[" << t << "] = ";
-    for (const Symbol &s : p.crhs()) cout << s;
-    cout << endl;
+    dout << "[" << nt << "]" << "[" << t << "] = " << p << endl;
 }
 
 /* ////////////////////////////////////////////////////////////////////////// */
@@ -159,9 +157,7 @@ static void
 emitParseState(const Symbol &in, const Symbol &tos, const CFGProduction &p)
 {
     cout << "..." << (Symbol::DEAD == in ? "" : " in: " + in.sym())
-         << " top: " << tos << " action: ";
-    for (const Symbol &s : p.crhs()) { cout << s; }
-    cout << endl;
+         << " top: " << tos << " action: " << p << endl;
 }
 
 /* ////////////////////////////////////////////////////////////////////////// */
@@ -196,11 +192,11 @@ StrongLL1Parser::parseImpl(void)
             cout << "+++ match: " << top << endl;
             if (top.epsilon()) continue;
             if (!input.empty()) {
-               if (top != in) stopParse();
                input.erase(input.begin());
             }
         }
         else if (!input.empty() && Symbol::DEAD == cp.lhs().sym()) {
+            goto dump;
             stopParse();
         }
         else {
@@ -212,6 +208,7 @@ StrongLL1Parser::parseImpl(void)
         }
     }
     cout << "--- done with table-driven parse" << endl;
+dump:
     if (stk.size() == 0 && input.empty()) {
         cout << "*** success: input recognized by grammar ***" << endl;
     }
