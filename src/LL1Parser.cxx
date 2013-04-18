@@ -150,11 +150,15 @@ StrongLL1Parser::parse(const vector<Symbol> &input)
     /* first try strong */
     try {
         this->initTable();
-        this->parseImpl(input, true);
+        try {
+            this->parseImpl(input, true);
+        }
+        catch (DialectException &e) {
+            cerr << e.what() << endl;
+        }
     }
     catch (DialectException &e) {
-        /* then try dynamic */
-        cerr << e.what() << endl;
+        /* not strong ll(1), so try experimental dynamic parser */
         this->parseImpl(input , false);
     }
 }
@@ -270,7 +274,7 @@ StrongLL1Parser::dynamicParse(const vector<Symbol> &_input)
     auto input = _input;
     stack<Symbol> stk;
 
-    cout << endl << "--- starting full table-driven parse" << endl;
+    cout << endl << "--- starting dynamic table-driven parse" << endl;
 
     stk.push(this->_cfg.startSymbol());
 
@@ -301,7 +305,7 @@ StrongLL1Parser::dynamicParse(const vector<Symbol> &_input)
             }
         }
     }
-    cout << "--- done with full table-driven parse" << endl;
+    cout << "--- done with dynamic table-driven parse" << endl;
     if (stk.size() == 0 && input.empty()) {
         cout << "*** success: input recognized by grammar ***" << endl;
     }
