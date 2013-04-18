@@ -146,7 +146,7 @@ emitNullables(const CFGProductions &productions)
         emitAllMembers(nullables, false);
     }
     else {
-        dout << "did not find nullable non-terminals!" << endl;
+        dout << "did not find nullable non-terminals..." << endl;
     }
 }
 
