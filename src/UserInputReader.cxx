@@ -15,7 +15,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "UserInputParser.hxx"
+#include "UserInputReader.hxx"
 #include "Constants.hxx"
 #include "DialectException.hxx"
 
@@ -32,7 +32,7 @@
 using namespace std;
 
 /* ////////////////////////////////////////////////////////////////////////// */
-UserInputParser::UserInputParser(const string &fileToParse)
+UserInputReader::UserInputReader(const string &fileToParse)
 {
     string line;
 

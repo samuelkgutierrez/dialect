@@ -15,8 +15,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef USER_INPUT_PARSER_INCLUDED
-#define USER_INPUT_PARSER_INCLUDED 
+#ifndef USER_INPUT_READER_INCLUDED
+#define USER_INPUT_READER_INCLUDED
 
 #include "Base.hxx"
 #include "CFG.hxx"
@@ -24,16 +24,16 @@
 #include <string>
 #include <vector>
 
-class UserInputParser {
+class UserInputReader {
 private:
     std::vector<Symbol> _input;
 
 public:
-    UserInputParser(void) { ; }
+    UserInputReader(void) { ; }
 
-    UserInputParser(const std::string &fileToParse);
+    UserInputReader(const std::string &fileToParse);
 
-    ~UserInputParser(void) { ; }
+    ~UserInputReader(void) { ; }
 
     std::vector<Symbol> input(void) const { return this->_input; }
 };

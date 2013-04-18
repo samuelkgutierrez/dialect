@@ -33,7 +33,7 @@ Base.hxx Base.cxx \
 DialectException.hxx DialectException.cxx \
 CFG.hxx CFG.cxx \
 LL1Parser.hxx LL1Parser.cxx \
-UserInputParser.hxx UserInputParser.cxx \
+UserInputReader.hxx UserInputReader.cxx \
 ${PARSER_FILES}
 
 dialect_SOURCES = \

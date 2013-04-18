@@ -29,7 +29,7 @@
 #include "CFG.hxx"
 #include "LL1Parser.hxx"
 #include "CFGParser.h"
-#include "UserInputParser.hxx"
+#include "UserInputReader.hxx"
 
 extern int parserParse(FILE *fp);
 /* can safely be used AFTER call to parseCFG */
@@ -114,7 +114,7 @@ main(int argc, char **argv)
         contextFreeGrammar->clean();
         /* prep grammar so that it can be fed to a parse table */
         contextFreeGrammar->crunch();
-        UserInputParser inputParser(fileToParse);
+        UserInputReader inputParser(fileToParse);
         /* init ll1 parser */
         LL1Parser ll1(*contextFreeGrammar, inputParser.input());
         /* set verbosity */
