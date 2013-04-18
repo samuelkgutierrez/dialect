@@ -187,13 +187,12 @@ StrongLL1Parser::parseImpl(void)
         else in = Symbol(Symbol::END);
         CFGProduction cp = pt[top][in];
         if (top.terminal()) {
-            if (!input.empty()) {
-                if (top == *input.begin()) {
-                    input.erase(input.begin());
-                    cout << "+++ match: " << top << endl;
-                }
-            }
+            cout << "TOP: " << top << endl;
             stk.pop();
+            if (top.epsilon() || Symbol::END == top.sym()) continue;
+            if (!input.empty() && top != *input.begin()) goto dump;
+            cout << "+++ match: " << top << endl;
+            input.erase(input.begin());
         }
         else if (Symbol::DEAD == cp.lhs().sym()) {
             goto dump;
