@@ -153,7 +153,7 @@ StrongLL1Parser::parse(const vector<Symbol> &input)
         this->parseImpl(input, true);
     }
     catch (DialectException &e) {
-        /* then try full */
+        /* then try dynamic */
         cerr << e.what() << endl;
         this->parseImpl(input , false);
     }
@@ -200,9 +200,7 @@ StrongLL1Parser::strongParse(const vector<Symbol> &_input)
             cout << "+++ match: " << top << endl;
             if (!input.empty()) input.erase(input.begin());
         }
-        else if (Symbol::DEAD == cp.lhs().sym()) {
-            goto dump;
-        }
+        else if (Symbol::DEAD == cp.lhs().sym()) goto dump;
         else {
             emitParseState(in, top, cp);
             stk.pop();
@@ -266,7 +264,7 @@ aInFiOfA(const CFGProduction &p,
 
 /* ////////////////////////////////////////////////////////////////////////// */
 void
-StrongLL1Parser::fullParse(const vector<Symbol> &_input)
+StrongLL1Parser::dynamicParse(const vector<Symbol> &_input)
 {
     ParseTable &pt = this->_table;
     auto input = _input;
@@ -331,5 +329,5 @@ void
 StrongLL1Parser::parseImpl(const vector<Symbol> &input , bool strong)
 {
     if (strong) this->strongParse(input);
-    else this->fullParse(input);
+    else this->dynamicParse(input);
 }

@@ -59,7 +59,7 @@ private:
 
     void strongParse(const std::vector<Symbol> &input);
 
-    void fullParse(const std::vector<Symbol> &input);
+    void dynamicParse(const std::vector<Symbol> &input);
 
 public:
     StrongLL1Parser(void) : LL1Parser() { ; }
