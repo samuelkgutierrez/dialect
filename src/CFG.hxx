@@ -135,6 +135,8 @@ public:
 
     Symbol &lhs(void) { return this->leftHandSide; }
 
+    Symbol clhs(void) const { return this->leftHandSide; }
+
     std::vector<Symbol> &rhs(void) { return this->rightHandSide; }
 
     std::vector<Symbol> crhs(void) const { return this->rightHandSide; }

@@ -114,13 +114,13 @@ main(int argc, char **argv)
         contextFreeGrammar->clean();
         /* prep grammar so that it can be fed to a parse table */
         contextFreeGrammar->crunch();
-        UserInputReader inputParser(fileToParse);
         /* init ll1 parser */
-        LL1Parser ll1(*contextFreeGrammar, inputParser.input());
+        LL1Parser ll1(*contextFreeGrammar);
         /* set verbosity */
         ll1.verbose(verboseMode);
         /* try to parse -- catch any funk */
-        ll1.parse();
+        UserInputReader inputParser(fileToParse);
+        ll1.parse(inputParser.input());
         /* done! */
         delete contextFreeGrammar;
     }

@@ -122,19 +122,19 @@ StrongLL1Parser::initTable(void)
         dout << endl;
     }
     if (conflict) {
-        string estr = "*** grammar not strong LL(1) ***";
+        string estr = "*** grammar not LL(1) ***";
         throw DialectException(DIALECT_WHERE, estr, false);
     }
 }
 
 /* ////////////////////////////////////////////////////////////////////////// */
 void
-LL1Parser::parse(void)
+LL1Parser::parse(const vector<Symbol> &input)
 {
     try {
-        StrongLL1Parser sll1(this->_cfg, this->_input);
+        StrongLL1Parser sll1(this->_cfg);
         sll1.verbose(this->_verbose);
-        sll1.parse();
+        sll1.parse(input);
     }
     catch (DialectException &e) {
         /* both approaches failed */
@@ -144,17 +144,17 @@ LL1Parser::parse(void)
 
 /* ////////////////////////////////////////////////////////////////////////// */
 void
-StrongLL1Parser::parse(void)
+StrongLL1Parser::parse(const vector<Symbol> &input)
 {
     /* first try strong */
     try {
         this->initTable();
-        this->parseImpl(true);
+        this->parseImpl(input, true);
     }
     catch (DialectException &e) {
         /* then try full */
         cerr << e.what() << endl;
-        this->parseImpl(false);
+        this->parseImpl(input , false);
     }
 }
 
@@ -176,11 +176,11 @@ stopParse(void)
 
 /* ////////////////////////////////////////////////////////////////////////// */
 void
-StrongLL1Parser::strongParse(void)
+StrongLL1Parser::strongParse(const vector<Symbol> &_input)
 {
     ParseTable &pt = this->_table;
-    vector<Symbol> input = this->_input;
     stack<Symbol> stk;
+    auto input = _input;
 
     cout << endl << "--- starting strong table-driven parse" << endl;
 
@@ -241,9 +241,12 @@ aInFiOfA(const CFGProduction &p,
 {
     auto sc = in;
     Symbol top;
+    auto rhs = p.crhs();
 
-    cout << "P: " << p << endl;
-    for (auto s = p.crhs().rbegin(); s != p.crhs().rend(); ++s) {
+    if (p.clhs() == Symbol::DEAD) {
+        throw;
+    }
+    for (auto s = rhs.rbegin(); s != rhs.rend(); ++s) {
         cout << "PUSHING: " << *s << endl;
         sc.push(*s);
     }
@@ -262,10 +265,10 @@ aInFiOfA(const CFGProduction &p,
 
 /* ////////////////////////////////////////////////////////////////////////// */
 void
-StrongLL1Parser::fullParse(void)
+StrongLL1Parser::fullParse(const vector<Symbol> &_input)
 {
     ParseTable &pt = this->_table;
-    vector<Symbol> input = this->_input;
+    auto input = _input;
     stack<Symbol> stk;
 
     cout << endl << "--- starting full table-driven parse" << endl;
@@ -324,8 +327,8 @@ dump:
 
 /* ////////////////////////////////////////////////////////////////////////// */
 void
-StrongLL1Parser::parseImpl(bool strong)
+StrongLL1Parser::parseImpl(const vector<Symbol> &input , bool strong)
 {
-    if (strong) this->strongParse();
-    else this->fullParse();
+    if (strong) this->strongParse(input);
+    else this->fullParse(input);
 }
