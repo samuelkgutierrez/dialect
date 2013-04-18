@@ -239,8 +239,59 @@ dump:
 void
 StrongLL1Parser::fullParse(void)
 {
+    ParseTable &pt = this->_table;
+    vector<Symbol> &input = this->_input;
+    stack<Symbol> stk;
+
     cout << endl << "--- starting full table-driven parse" << endl;
+
+    stk.push(this->_cfg.startSymbol());
+
+    while (!stk.empty()) {
+        Symbol top = stk.top();
+        Symbol in;
+        if (!input.empty()) in = *input.begin();
+        else in = Symbol(Symbol::END);
+        CFGProduction cp = pt[top][in];
+        if (top.terminal()) {
+            stk.pop();
+            if (top.epsilon()) continue;
+            if (top != in) goto dump;
+            cout << "+++ match: " << top << endl;
+            if (!input.empty()) input.erase(input.begin());
+        }
+        else if (Symbol::DEAD == cp.lhs().sym()) {
+            goto dump;
+        }
+        else {
+            emitParseState(in, top, cp);
+            stk.pop();
+            for (auto s = cp.rhs().rbegin(); s != cp.rhs().rend(); ++s) {
+                stk.push(*s);
+            }
+        }
+    }
     cout << "--- done with full table-driven parse" << endl;
+    if (stk.size() == 0 && input.empty()) {
+        cout << "*** success: input recognized by grammar ***" << endl;
+    }
+    else {
+dump:
+        cout << "*** failure: input not recognized by grammar ***" << endl;
+        cout << "*** begin state dump ***" << endl;
+        cout << "input empty: " << (input.empty() ? "yes" : "no") << endl;
+        while (!input.empty()) {
+            cout << " -- " << *input.begin() << endl;
+            input.erase(input.begin());
+        }
+        cout << "stack empty: " << (stk.empty() ? "yes" : "no") << endl;
+        while (!stk.empty()) {
+            cout << " -- " << stk.top() << endl;
+            stk.pop();
+        }
+        cout << "*** end state dump ***" << endl;
+        stopParse();
+    }
 }
 
 /* ////////////////////////////////////////////////////////////////////////// */
