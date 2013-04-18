@@ -118,12 +118,13 @@ StrongLL1Parser::initTable(void)
         }
     }
     if (verbose) {
-        dout << "done building LL(1) parse table ***" << endl;
+        dout << "done building LL(1) parse table :: grammar is"
+             << (conflict ? " not " : " ") << "LL(1) ***"
+             << endl;
         dout << endl;
     }
     if (conflict) {
-        string estr = "*** grammar not LL(1) ***";
-        throw DialectException(DIALECT_WHERE, estr, false);
+        throw DialectException(DIALECT_WHERE, "", false);
     }
 }
 

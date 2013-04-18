@@ -48,6 +48,7 @@ public:
     void verbose(bool v = true) { this->_verbose = v; }
 };
 
+/* every strong-LL(1) grammar is an LL(1) grammar and vise-versa */
 class StrongLL1Parser : public LL1Parser {
 private:
     ParseTable _table;
