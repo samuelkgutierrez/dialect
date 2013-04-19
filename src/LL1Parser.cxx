@@ -149,6 +149,8 @@ StrongLL1Parser::parse(const vector<Symbol> &input)
 {
     try {
         this->initTable();
+        /* XXX RM ME */
+        throw DialectException(DIALECT_WHERE, "FOO", false);
         try {
             /* try strong if grammar is strong-ll(1) */
             this->parseImpl(input, true);
@@ -249,25 +251,36 @@ dump:
 stack<Symbol>
 StrongLL1Parser::predict(const Symbol &nont, const Symbol &input)
 {
+    CFGProductions prods;
     stack<Symbol> res;
-    CFGProductions &productions = this->_cfg.prods();
+    CFGProductions productions = this->_cfg.prods();
 
-    for (const CFGProduction &p : productions) {
+    for (CFGProduction &p : productions) {
         if (nont == p.clhs()) {
+            if (aInFiOfA(p, input)) {
+                prods.push_back(p);
+            }
         }
     }
-
+    if (prods.size() != 1) {
+        cout << "ERRRRRRRRRRRRR" << endl;
+        throw;
+    }
+    CFGProduction p = *prods.begin();
+    for (auto s = p.rhs().begin(); s != p.rhs().end(); ++s) {
+        res.push(*s);
+    }
+    return res;
 }
 
 /* ////////////////////////////////////////////////////////////////////////// */
 void
 StrongLL1Parser::dynamicParse(const vector<Symbol> &_input)
 {
-    ParseTable &pt = this->_table;
     auto input = _input;
     stack<Symbol> stk;
 
-    cout << endl << "--- starting dynamic table-driven parse" << endl;
+    cout << endl << "--- starting dynamic parse" << endl;
 
     stk.push(this->_cfg.startSymbol());
 
@@ -285,15 +298,17 @@ StrongLL1Parser::dynamicParse(const vector<Symbol> &_input)
         }
         else {
             stk.pop();
+            cout << "TOP: " << top << " IN: " << in << endl;
             auto prediction = predict(top, in);
             emitParseState(in, top, prediction);
             while (!prediction.empty()) {
+                cout << "PUSH: " << prediction.top() << endl;
                 stk.push(prediction.top());
                 prediction.pop();
             }
         }
     }
-    cout << "--- done with dynamic table-driven parse" << endl;
+    cout << "--- done with dynamic parse" << endl;
     if (stk.size() == 0 && input.empty()) {
         cout << "*** success: input recognized by grammar ***" << endl;
     }
