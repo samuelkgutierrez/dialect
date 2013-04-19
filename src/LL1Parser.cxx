@@ -257,7 +257,7 @@ dump:
 }
 
 /* ////////////////////////////////////////////////////////////////////////// */
-/* XXX RENAME */
+/* XXX -- this shouldn't be an instance of StrongLL1Parser */
 stack<Symbol>
 StrongLL1Parser::predict(const Symbol &nont, const Symbol &input)
 {
@@ -273,7 +273,7 @@ StrongLL1Parser::predict(const Symbol &nont, const Symbol &input)
         }
     }
     if (prods.size() == 0) {
-        string estr = "*** input not recognized by grammar ***";
+        string estr = "*** input not recognized by parser ***";
         throw DialectException(DIALECT_WHERE, estr, false);
     }
     if (prods.size() != 1) {

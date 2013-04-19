@@ -55,6 +55,7 @@ static void
 usage(void)
 {
     cout << endl << "usage:" << endl;
+    cout << "dialect [-q] cfgspec [input] [-]" << endl;
 }
 
 /* ////////////////////////////////////////////////////////////////////////// */
