@@ -25,6 +25,7 @@
 #include "Base.hxx"
 #include "CFG.hxx"
 
+#include <stack>
 #include <vector>
 #include <map>
 
@@ -54,6 +55,8 @@ private:
     ParseTable _table;
 
     void initTable(void);
+
+    std::stack<Symbol> predict(const Symbol &nont, const Symbol &input);
 
     void parseImpl(const std::vector<Symbol> &input, bool strong);
 

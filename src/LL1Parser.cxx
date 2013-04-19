@@ -147,10 +147,10 @@ LL1Parser::parse(const vector<Symbol> &input)
 void
 StrongLL1Parser::parse(const vector<Symbol> &input)
 {
-    /* first try strong */
     try {
         this->initTable();
         try {
+            /* try strong if grammar is strong-ll(1) */
             this->parseImpl(input, true);
         }
         catch (DialectException &e) {
@@ -169,6 +169,14 @@ emitParseState(const Symbol &in, const Symbol &tos, const CFGProduction &p)
 {
     cout << "..." << (Symbol::DEAD == in ? "" : " in: " + in.sym())
          << " top: " << tos << " action: " << p << endl;
+}
+
+/* ////////////////////////////////////////////////////////////////////////// */
+static void
+emitParseState(const Symbol &in, const Symbol &tos, const stack<Symbol> &p)
+{
+    cout << "..." << (Symbol::DEAD == in ? "" : " in: " + in.sym())
+         << " top: " << tos << " action: " << endl;
 }
 
 /* ////////////////////////////////////////////////////////////////////////// */
@@ -237,33 +245,18 @@ dump:
 }
 
 /* ////////////////////////////////////////////////////////////////////////// */
-Symbol
-aInFiOfA(const CFGProduction &p,
-         const stack<Symbol> &in,
-         const Symbol &a)
+/* XXX RENAME */
+stack<Symbol>
+StrongLL1Parser::predict(const Symbol &nont, const Symbol &input)
 {
-    auto sc = in;
-    Symbol top;
-    auto rhs = p.crhs();
+    stack<Symbol> res;
+    CFGProductions &productions = this->_cfg.prods();
 
-    if (p.clhs() == Symbol::DEAD) {
-        throw;
-    }
-    for (auto s = rhs.rbegin(); s != rhs.rend(); ++s) {
-        cout << "PUSHING: " << *s << endl;
-        sc.push(*s);
-    }
-    while (!sc.empty()) {
-        top = sc.top();
-        if ((top.firsts().end() != top.firsts().find(a)) && !top.nullable()) {
-            return top;
-        }
-        else {
-            cout << a << " not in FIRST(" << top << ")" << endl;
-            sc.pop();
+    for (const CFGProduction &p : productions) {
+        if (nont == p.clhs()) {
         }
     }
-    return a;
+
 }
 
 /* ////////////////////////////////////////////////////////////////////////// */
@@ -283,10 +276,6 @@ StrongLL1Parser::dynamicParse(const vector<Symbol> &_input)
         Symbol in;
         if (!input.empty()) in = *input.begin();
         else in = Symbol(Symbol::END);
-        cout << "OLD TOP: " << top << endl;
-        top = aInFiOfA(pt[top][in], stk, in);
-        cout << "NEW TOP: " << top << endl;
-        CFGProduction cp = pt[top][in];
         if (top.terminal()) {
             stk.pop();
             if (top.epsilon()) continue;
@@ -294,14 +283,13 @@ StrongLL1Parser::dynamicParse(const vector<Symbol> &_input)
             cout << "+++ match: " << top << endl;
             if (!input.empty()) input.erase(input.begin());
         }
-        else if (Symbol::DEAD == cp.lhs().sym()) {
-            goto dump;
-        }
         else {
-            emitParseState(in, top, cp);
             stk.pop();
-            for (auto s = cp.rhs().rbegin(); s != cp.rhs().rend(); ++s) {
-                stk.push(*s);
+            auto prediction = predict(top, in);
+            emitParseState(in, top, prediction);
+            while (!prediction.empty()) {
+                stk.push(prediction.top());
+                prediction.pop();
             }
         }
     }
