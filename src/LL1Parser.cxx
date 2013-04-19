@@ -149,14 +149,14 @@ StrongLL1Parser::parse(const vector<Symbol> &input)
 {
     try {
         this->initTable();
-        /* XXX RM ME */
-        throw DialectException(DIALECT_WHERE, "FOO", false);
         try {
             /* try strong if grammar is strong-ll(1) */
             this->parseImpl(input, true);
+            /* now try experimental dynamic parser */
+            this->parseImpl(input , false);
         }
         catch (DialectException &e) {
-            cerr << e.what() << endl;
+            throw e;
         }
     }
     catch (DialectException &e) {
