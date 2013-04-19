@@ -686,13 +686,6 @@ CFG::computeFirstSets(void)
 void
 CFG::followsetPrep(void)
 {
-#if 0
-    /* add a new, special terminal, $ and new start production */
-    CFGProduction newp(Symbol::START, this->startSymbol().sym() + Symbol::END);
-    this->productions.insert(this->productions.begin(), newp);
-    /* init S''s follow set to include $ */
-    this->productions.begin()->lhs().follows().insert(Symbol(Symbol::END));
-#endif
     this->refresh();
     this->refreshFirstSets();
 }

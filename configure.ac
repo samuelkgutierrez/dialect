@@ -15,7 +15,7 @@
 
 AC_PREREQ([2.60])
 
-AC_INIT([dialect], [0.1])
+AC_INIT([dialect], [0.2])
 
 AC_CONFIG_SRCDIR([src])
 
