@@ -273,12 +273,12 @@ StrongLL1Parser::predict(const Symbol &nont, const Symbol &input)
         }
     }
     if (prods.size() == 0) {
-        cout << "*** input not recognized by grammar ***" << endl;
-        throw;
+        string estr = "*** input not recognized by grammar ***";
+        throw DialectException(DIALECT_WHERE, estr, false);
     }
     if (prods.size() != 1) {
-        cout << "*** grammar is not LL(1) ***" << endl;
-        throw;
+        string estr = "*** grammar is not LL(1) ***";
+        throw DialectException(DIALECT_WHERE, estr, false);
     }
     CFGProduction p = *prods.begin();
     for (auto s = p.rhs().begin(); s != p.rhs().end(); ++s) {
