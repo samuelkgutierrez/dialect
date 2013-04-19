@@ -177,8 +177,18 @@ emitParseState(const Symbol &in, const Symbol &tos, const CFGProduction &p)
 static void
 emitParseState(const Symbol &in, const Symbol &tos, const stack<Symbol> &p)
 {
+    auto savep = p;
+    vector<Symbol> q;
     cout << "..." << (Symbol::DEAD == in ? "" : " in: " + in.sym())
-         << " top: " << tos << " action: " << endl;
+         << " top: " << tos << " action: ";
+    while (!savep.empty()) {
+        q.push_back(savep.top());
+        savep.pop();
+    }
+    for (auto i = q.rbegin(); i != q.rend(); ++i) {
+        cout << *i;
+    }
+    cout << endl;
 }
 
 /* ////////////////////////////////////////////////////////////////////////// */
@@ -262,8 +272,12 @@ StrongLL1Parser::predict(const Symbol &nont, const Symbol &input)
             }
         }
     }
+    if (prods.size() == 0) {
+        cout << "*** input not recognized by grammar ***" << endl;
+        throw;
+    }
     if (prods.size() != 1) {
-        cout << "ERRRRRRRRRRRRR" << endl;
+        cout << "*** grammar is not LL(1) ***" << endl;
         throw;
     }
     CFGProduction p = *prods.begin();
@@ -298,11 +312,9 @@ StrongLL1Parser::dynamicParse(const vector<Symbol> &_input)
         }
         else {
             stk.pop();
-            cout << "TOP: " << top << " IN: " << in << endl;
             auto prediction = predict(top, in);
             emitParseState(in, top, prediction);
             while (!prediction.empty()) {
-                cout << "PUSH: " << prediction.top() << endl;
                 stk.push(prediction.top());
                 prediction.pop();
             }
