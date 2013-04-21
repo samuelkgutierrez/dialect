@@ -257,7 +257,7 @@ dump:
 }
 
 /* ////////////////////////////////////////////////////////////////////////// */
-/* XXX -- this shouldn't be an instance of StrongLL1Parser */
+/* XXX -- this shouldn't be a member of StrongLL1Parser */
 stack<Symbol>
 StrongLL1Parser::predict(const Symbol &nont, const Symbol &input)
 {
