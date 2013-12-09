@@ -28,7 +28,7 @@
 #include "DialectException.hxx"
 #include "CFG.hxx"
 #include "LL1Parser.hxx"
-#include "CFGParser.h"
+#include "CFGParser.hh"
 #include "UserInputReader.hxx"
 
 extern int parserParse(FILE *fp);

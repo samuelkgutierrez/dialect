@@ -17,15 +17,15 @@
 AM_YFLAGS=-d -t
 
 BUILT_SOURCES = \
-CFGParser.cc CFGParser.h CFGScanner.cc
+CFGParser.cc CFGParser.hh CFGScanner.cc
 
 CLEANFILES = \
-${BUILT_SOURCES} CFGParser.h
+${BUILT_SOURCES} CFGParser.hh
 
 bin_PROGRAMS = \
 dialect
 
-PARSER_FILES = CFGParser.yy CFGParser.h CFGScanner.ll
+PARSER_FILES = CFGParser.yy CFGParser.hh CFGScanner.ll
 
 BASE_SRC = \
 Constants.hxx \

@@ -28,7 +28,7 @@
 #include <cstdlib>
 #include <string>
 
-#include "CFGParser.h"
+#include "CFGParser.hh"
 
 #define SAVE_TOKEN                                                             \
 do {                                                                           \
